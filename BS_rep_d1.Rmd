@@ -393,8 +393,17 @@ baseline_trust_effects$category <- NULL
 effects <- baseline_trust_effects
 effects$ylo90 <- (effects$AME - (qt(.95, 100) * effects$SE))
 effects$yhi90 <- (effects$AME + (qt(.95, 100) * effects$SE))
-effects$model2 <- ifelse(effects$model %in% "restriction_carry_out_only","Dependent Variable: Restaurants Carry Out Only",ifelse(effects$model %in% "restriction_closing_k12","Dependent Variable: Close K-12 Schools",ifelse(effects$model %in% "restriction_intl_travel","Dependent Variable: Restrict International Travel",ifelse(effects$model %in% "restriction_large_gatherings","Dependent Variable: Restrict Large Gatherings",ifelse(effects$model %in% "restriction_most_business","Dependent Variable: Restrict Most Businesses",ifelse(effects$model %in% "restriction_postponing_primary","Dependent Variable: Postpone Primary Elections",ifelse(effects$model %in% "restriction_sporting_events","Dependent Variable: Restrict Sporting Events",NA)))))))
-effects$factor <- ifelse(effects$factor %in% "trust_elected_officials","Elected Officials Trust",ifelse(effects$factor %in% "trust_media","Media Trust",ifelse(effects$factor %in% "trust_scientists_fa_dim1","Scientific Trust",NA)))
+effects$model2 <- ifelse(effects$model %in% "restriction_carry_out_only","Dependent Variable: Restaurants Carry Out Only",
+                         ifelse(effects$model %in% "restriction_closing_k12","Dependent Variable: Close K-12 Schools",
+                                ifelse(effects$model %in% "restriction_intl_travel","Dependent Variable: Restrict International Travel",
+                                       ifelse(effects$model %in% "restriction_large_gatherings","Dependent Variable: Restrict Large Gatherings",
+                                              ifelse(effects$model %in% "restriction_most_business","Dependent Variable: Restrict Most Businesses",
+                                                     ifelse(effects$model %in% "restriction_postponing_primary","Dependent Variable: Postpone Primary Elections",
+                                                            ifelse(effects$model %in% "restriction_sporting_events","Dependent Variable: Restrict Sporting Events",NA)))))))
+
+effects$factor <- ifelse(effects$factor %in% "trust_elected_officials","Elected Officials Trust",
+                         ifelse(effects$factor %in% "trust_media","Media Trust",
+                                ifelse(effects$factor %in% "trust_scientists_fa_dim1","Scientific Trust",NA)))
 
 effects$label <- ifelse(effects$p < 0.01,paste(round(effects$AME,2),"***",sep=""),ifelse(effects$p < 0.05,paste(round(effects$AME,2),"**",sep=""),ifelse(effects$p < 0.10,paste(round(effects$AME,2),"*",sep=""),NA)))
 
