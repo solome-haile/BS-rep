@@ -52,7 +52,7 @@ pew_ATP_W64 <- subset(pew_ATP_W64,
 ## of interest (policy support)
 ```{r, eval=FALSE}
 #subsetting DV data 
-covid_ideo_scales <- subset(pew_ATP_W64_ATP_W64,
+covid_ideo_scales <- subset(pew_ATP_W64,
                             select=c(QKEY,COVID_RESTRICTION_a_W64,COVID_RESTRICTION_b_W64,
                                      COVID_RESTRICTION_c_W64,COVID_RESTRICTION_d_W64,
                                      COVID_RESTRICTION_e_W64,COVID_RESTRICTION_f_W64,
@@ -95,12 +95,12 @@ covid_ideo_scales$restriction_postponing_primary <- recode(covid_ideo_scales$res
 # covid_ideo_scales[covid_ideo_scales == "Unnecessary"] <- 0
 
 #recoding political ideology variable
-covid_ideo_scales$libcon <- ifelse(covid_ideo_scales$libcon %in% "Very Conservative",1,
-                                   ifelse(covid_ideo_scales$libcon %in% "Conservative",2,
-                                          ifelse(covid_ideo_scales$libcon %in% "Moderate",3,
-                                                 ifelse(covid_ideo_scales$libcon %in% "Liberal",4,
-                                                        ifelse(covid_ideo_scales$libcon %in% "Liberal",4,
-                                                               ifelse(covid_ideo_scales$libcon %in% "Very liberal",5,NA))))))
+# covid_ideo_scales$libcon <- ifelse(covid_ideo_scales$libcon %in% "Very Conservative",1,
+#                                    ifelse(covid_ideo_scales$libcon %in% "Conservative",2,
+#                                           ifelse(covid_ideo_scales$libcon %in% "Moderate",3,
+#                                                  ifelse(covid_ideo_scales$libcon %in% "Liberal",4,
+#                                                         ifelse(covid_ideo_scales$libcon %in% "Liberal",4,
+#                                                                ifelse(covid_ideo_scales$libcon %in% "Very liberal",5,NA))))))
 
 #transforming observations into numeric
 # for(i in 2:ncol(covid_ideo_scales)){
@@ -119,13 +119,26 @@ library(FactoMineR)
 library(factoextra)
 
 #transforming observations into factors for factor analysis
-x <- covid_ideo_scales[,c(-1)]
-for(i in 1:8){
-  x[,i] <- factor(x[,i])
-}
+x <- covid_ideo_scales[,c(2:9)]
+# for(i in 1:8){
+#   x[,i] <- as.factor(x[,i])
+# }
 
-#conducting exploratory factor analysis
+#trying changing observations into factors the long way
+x[,1] <- as.factor(covid_ideo_scales$restriction_intl_travel)
+x[,2] <- as.factor(covid_ideo_scales$restriction_most_business)
+x[,3] <- as.factor(covid_ideo_scales$restriction_large_gatherings)
+x[,4] <- as.factor(covid_ideo_scales$restriction_sporting_events)
+x[,5] <- as.factor(covid_ideo_scales$restriction_closing_k12)
+x[,6] <- as.factor(covid_ideo_scales$restriction_carry_out_only)
+x[,7] <- as.factor(covid_ideo_scales$restriction_postponing_primary)
+#x[,8] <- as.factor(covid_ideo_scales$libcon)
+#x
+
+#conducting exploratory factor analysis & plotting results
 factanal <- FAMD(x, graph = F,ncp=7,sup.var = NULL)
+library(rstatix)
+
 fviz_screeplot(factanal)
 fviz_contrib(factanal, "var", axes = 1)
 fviz_contrib(factanal, "var", axes = 2)
