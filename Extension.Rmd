@@ -1,0 +1,20 @@
+---
+title: "Extension"
+author: "Beza and Solome"
+date: "2023-03-18"
+output: html_document
+---
+
+```{r}
+# load the foreign package to read wa
+library(foreign)
+# read in the .sav file using read.spss()
+dataw46 <- read.spss("ATP W46.sav", to.data.frame = TRUE)
+# view the first few rows of your data
+head(dataw46)
+
+```
+```{r}
+#selecting variables for religious measure (once I started working on it, I figure we should talk about it before)
+```
+
