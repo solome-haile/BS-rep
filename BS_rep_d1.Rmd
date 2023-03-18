@@ -32,7 +32,7 @@ knitr::opts_knit$set(root.dir = "/Users/solomonaberash/Desktop/Graduate School/S
 
 ```{r}
 ##Loading Both Waves of pew_ATP_W64 Data
-pew_ATP_W64 <- read_dta("ATP_W64.dta")
+pew_ATP_W64 <- read_dta("ATP_W64.dta") #this is in haven label type
 
 
 #subetting relevant portion of wave 64
@@ -64,7 +64,7 @@ colnames(covid_ideo_scales) <- c("QKEY","restriction_intl_travel","restriction_m
                                  "restriction_closing_k12","restriction_carry_out_only",
                                  "restriction_postponing_primary","libcon")
 
-#transforming observations into characters
+#transforming observations into characters (had to redone long way, orginal code did not work)
 covid_ideo_scales[,2] <- as.character(covid_ideo_scales$restriction_intl_travel)
 covid_ideo_scales[,3] <- as.character(covid_ideo_scales$restriction_most_business)
 covid_ideo_scales[,4] <- as.character(covid_ideo_scales$restriction_large_gatherings)
@@ -74,7 +74,7 @@ covid_ideo_scales[,7] <- as.character(covid_ideo_scales$restriction_carry_out_on
 covid_ideo_scales[,8] <- as.character(covid_ideo_scales$restriction_postponing_primary)
 
 
-#recoding observations into binary
+#recoding observations into binary --> don't use if else because you don't want to improperly code the incomplete observations that will need to be removed at the end
 covid_ideo_scales$restriction_intl_travel <- recode(covid_ideo_scales$restriction_intl_travel, 
                             "1"= 1, "2"= 0)  
 covid_ideo_scales$restriction_most_business <- recode(covid_ideo_scales$restriction_most_business, 
@@ -90,11 +90,11 @@ covid_ideo_scales$restriction_carry_out_only <- recode(covid_ideo_scales$restric
 covid_ideo_scales$restriction_postponing_primary <- recode(covid_ideo_scales$restriction_postponing_primary, 
                             "1"= 1, "2"= 0)
 
-#recoding observations into binary
+#recoding observations into binary --> this currently (3/17) doesn't work because the variables have not been recorded into necessary/unecessary terms, decided to do the above long/manual way to convert it into a numeric binary 
 # covid_ideo_scales[covid_ideo_scales == "Necessary"] <- 1
 # covid_ideo_scales[covid_ideo_scales == "Unnecessary"] <- 0
 
-#recoding political ideology variable
+#recoding political ideology variable --> currently (3/17) this yields a bunch of NA's that end up making all the observations 
 # covid_ideo_scales$libcon <- ifelse(covid_ideo_scales$libcon %in% "Very Conservative",1,
 #                                    ifelse(covid_ideo_scales$libcon %in% "Conservative",2,
 #                                           ifelse(covid_ideo_scales$libcon %in% "Moderate",3,
@@ -102,7 +102,7 @@ covid_ideo_scales$restriction_postponing_primary <- recode(covid_ideo_scales$res
 #                                                         ifelse(covid_ideo_scales$libcon %in% "Liberal",4,
 #                                                                ifelse(covid_ideo_scales$libcon %in% "Very liberal",5,NA))))))
 
-#transforming observations into numeric
+#transforming observations into numeric --> this doesn't work (as of 3/17) and I am not sure it is necessary considering you can just convert the data into a 0/1 numeric binary in one step (as I did in lines 78-91)
 # for(i in 2:ncol(covid_ideo_scales)){
 #   covid_ideo_scales[,i] <- as.numeric(covid_ideo_scales[,i])
 # }
@@ -135,7 +135,7 @@ x[,7] <- as.factor(covid_ideo_scales$restriction_postponing_primary)
 #x[,8] <- as.factor(covid_ideo_scales$libcon)
 #x
 
-#conducting exploratory factor analysis & plotting results
+#conducting exploratory factor analysis & plotting preliminary results
 factanal <- FAMD(x, graph = F,ncp=7,sup.var = NULL)
 library(rstatix)
 
@@ -192,9 +192,14 @@ covid_ideo_scales$summated_restriction_scale <- rowSums(covid_ideo_scales[2:8],n
 ```
 
 
-## Item-Response Theory Model 
+## Item-Response Theory Model= "The item response theory (IRT), also known as the latent response theory refers to a family of mathematical models that attempt to explain the relationship between latent traits (unobservable characteristic or attribute) and their manifestations (i.e. observed outcomes, responses or performance). They establish a link between the properties of items on an instrument, individuals responding to these items and the underlying trait being measured. IRT assumes that the latent construct (e.g. stress, knowledge, attitudes) and items of a measure are organized in an unobservable continuum. Therefore, its main purpose focuses on establishing the individual’s position on that continuum."
+
+## In this context, IRT is used to create a continuum with the various COVID policy questions and the aggregate score of a respondant's answers to the questions will proxy as an overall measure of support (which is a latent variable) for social distancing policies
+
+**NOTE: this whole chunk works but I want to know the more granular mechnanics of how/why, but leave that to me**
 ```{r, eval=F}
-irt <- mirt(covid_ideo_scales[2:8], model = 1, itemtype = "graded", SE = T, verbose = T,removeEmptyRows = TRUE)
+irt <- mirt(covid_ideo_scales[2:8], model = 1, itemtype = "graded", SE = T, 
+            verbose = T,removeEmptyRows = TRUE)
 plt <- plot(irt, type = 'trace', facet_items=F) #store the object
 print(plt) #plot the object
 str(plt) #find the data
@@ -207,24 +212,51 @@ pltdata$response <- groups$panel.args.common$groups
 
 plt$panel.args.common$groups
 
-pltdata$item2 <- factor(pltdata$item,levels=c("restriction_carry_out_only","restriction_closing_k12","restriction_intl_travel","restriction_large_gatherings","restriction_most_business","restriction_postponing_primary","restriction_sporting_events"),labels=c("Carry Out Only","Close K-12 Schools","Restrict Intl. Travel","Restrict Large Gatherings","Restrict Most Businesses","Postpone Primary Elections","Restrict Sporting Events"))
+pltdata$item2 <- factor(pltdata$item,levels=c("restriction_carry_out_only",
+                                              "restriction_closing_k12","restriction_intl_travel","restriction_large_gatherings",
+                                              "restriction_most_business","restriction_postponing_primary","restriction_sporting_events"),
+                        labels=c("Carry Out Only","Close K-12 Schools",
+                                 "Restrict Intl. Travel","Restrict Large Gatherings",
+                                 "Restrict Most Businesses","Postpone Primary Elections",
+                                 "Restrict Sporting Events"))
 
-pltdata$item2 <- factor(pltdata$item2,levels=c("Restrict Intl. Travel","Restrict Sporting Events","Close K-12 Schools","Restrict Large Gatherings","Carry Out Only","Restrict Most Businesses","Postpone Primary Elections"))
+pltdata$item2 <- factor(pltdata$item2,levels=c("Restrict Intl. Travel",
+                                               "Restrict Sporting Events",
+                                               "Close K-12 Schools",
+                                               "Restrict Large Gatherings",
+                                               "Carry Out Only","Restrict Most Businesses",
+                                               "Postpone Primary Elections"))
 
-plot <- ggplot(pltdata, aes(x, y,linetype=item2,color=item2)) + geom_line() + scale_x_continuous(expression(theta)) + scale_y_continuous("Pr (Support)") + geom_hline(aes(yintercept = 0.5))  + theme_minimal() + labs(color="Policy",linetype="Policy") + theme(legend.position="bottom") #+ scale_colour_grey(start = 0, end = .5) + ggtitle("Ordinal IRT Model Characteric Curves for Emphatic Racism Scale")
+plot <- ggplot(pltdata, aes(x, y,linetype=item2,color=item2)) + 
+  geom_line() + 
+  scale_x_continuous(expression(theta)) + 
+  scale_y_continuous("Pr (Support)") + 
+  geom_hline(aes(yintercept = 0.5))  + 
+  theme_minimal() + 
+  labs(color="Policy",linetype="Policy") + 
+  theme(legend.position="bottom")
+#+ scale_colour_grey(start = 0, end = .5) + 
+#  ggtitle("Ordinal IRT Model Characteric Curves for Emphatic Racism Scale")
+
 #ggsave(file="covid19_restrictions_irt_curves_probs.png", plot, width = 8, height = 5.43, units = "in")
 ```
 
-## Scores
-```{r, eval=F}
+## Scores= the scores generated from the IRT continuum for each of the respondants (this is the ultimate support for social distancing policy that serves as the DV)
+
+**whole thing runs!**
+```{r}
+#storing scores from IRT analysis for each respondent in original covid scales data
 covid_ideo_scales$covid_restriction_fa_dim2 <- fscores(irt, full.scores = TRUE, full.scores.SE = F)
 colnames(covid_ideo_scales)[11] <- "covid_restriction_irt"
 
-pew_ATP_W64_ATP_W64 <- merge(pew_ATP_W64_ATP_W64,covid_ideo_scales,by=c("QKEY"),all=T)
-pew_ATP_W64_ATP_W64$covid_restriction_fa_dim1 <- pew_ATP_W64_ATP_W64$covid_restriction_fa_dim1-mean(pew_ATP_W64_ATP_W64$covid_restriction_fa_dim1,na.rm=T)
+#merging with original data set 
+pew_ATP_W64 <- merge(pew_ATP_W64,covid_ideo_scales,by=c("QKEY"),all=T)
+pew_ATP_W64$covid_restriction_fa_dim1 <- pew_ATP_W64$covid_restriction_fa_dim1-mean(pew_ATP_W64$covid_restriction_fa_dim1,na.rm=T)
 ```
 
 ## Covariates
+
+**whole thing runs! but not properly, so I will have to come back to this**
 ```{r, eval=F}
 #transforming gender covariate & plotting
 pew_ATP_W64$female <- as.character(pew_ATP_W64$F_SEX)
@@ -289,6 +321,7 @@ colnames(trust) <- c("QKEY","trust_elected_officials","trust_media",
 #omitting non-responses 
 trust[trust == "Refused"] <- NA
 
+#adding levels
 for(i in 2:ncol(trust)){
   print(table(trust[,i]))
   print(levels(trust[,i]))
@@ -418,11 +451,24 @@ effects$factor <- ifelse(effects$factor %in% "trust_elected_officials","Elected 
                          ifelse(effects$factor %in% "trust_media","Media Trust",
                                 ifelse(effects$factor %in% "trust_scientists_fa_dim1","Scientific Trust",NA)))
 
-effects$label <- ifelse(effects$p < 0.01,paste(round(effects$AME,2),"***",sep=""),ifelse(effects$p < 0.05,paste(round(effects$AME,2),"**",sep=""),ifelse(effects$p < 0.10,paste(round(effects$AME,2),"*",sep=""),NA)))
+effects$label <- ifelse(effects$p < 0.01,paste(round(effects$AME,2),"***",sep=""),
+                        ifelse(effects$p < 0.05,paste(round(effects$AME,2),"**",sep=""),
+                               ifelse(effects$p < 0.10,paste(round(effects$AME,2),"*",sep=""),NA)))
+
 
 for(i in unique(effects$model)){
   x <- subset(effects,effects$model %in% i)
-  plot <- ggplot(x,aes(x=factor,y=AME,factor=factor,group=factor,color=factor,shape=factor,label=label,fill=factor)) + facet_wrap(~model2) + coord_flip() + geom_linerange(aes(x= factor, ymin = ylo90, ymax = yhi90), position = position_dodge(width=0.75), lwd  = 1) + geom_pointrange(aes(x= factor, ymin = lower, ymax = upper), lwd = 1/2, position = position_dodge(width=0.75),fill="white") + theme_minimal() + scale_x_discrete("") + scale_y_continuous("Min/Max First Difference Marginal Effects on Pr(Necessary Government Policy)") + geom_hline(yintercept = 0, colour = gray(1/2), lty = 2) +  labs(color="Trust Effects",shape="Trust Effects") + theme(legend.position = "none") + theme(axis.text.x = element_text(hjust = 0.5),axis.text.y = element_text(hjust = 0.5)) + geom_label(vjust=-0.5,hjust=0.25,fill="white") + labs(caption="* p < 0.1; ** p < 0.05; *** p < 0.01") + scale_shape_manual("",values=c(23,22,21))
+  plot <- ggplot(x,aes(x=factor,y=AME,factor=factor,group=factor,color=factor,shape=factor,label=label,fill=factor)) + 
+    facet_wrap(~model2) + coord_flip() + 
+    geom_linerange(aes(x= factor, ymin = ylo90, ymax = yhi90), position = position_dodge(width=0.75), lwd  = 1) + 
+    geom_pointrange(aes(x= factor, ymin = lower, ymax = upper), lwd = 1/2, position = position_dodge(width=0.75),fill="white") + 
+    theme_minimal() + scale_x_discrete("") + scale_y_continuous("Min/Max First Difference Marginal Effects on Pr(Necessary Government Policy)") + 
+    geom_hline(yintercept = 0, colour = gray(1/2), lty = 2) +  
+    labs(color="Trust Effects",shape="Trust Effects") + 
+    theme(legend.position = "none") + 
+    theme(axis.text.x = element_text(hjust = 0.5),axis.text.y = element_text(hjust = 0.5)) + 
+    geom_label(vjust=-0.5,hjust=0.25,fill="white") + labs(caption="* p < 0.1; ** p < 0.05; *** p < 0.01") + 
+    scale_shape_manual("",values=c(23,22,21))
   print(plot)
   #ggsave(file=paste(i,"_model",".png",sep=""), plot, width = 8, height = 5.43, units = "in")
 }
