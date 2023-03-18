@@ -24,7 +24,11 @@ library(haven)
 library(datawizard)
 library(tidyverse)
 #setting working directory (Beza-- be sure to comments this out and set your own when you are coding!)
-knitr::opts_knit$set(root.dir = "/Users/solomonaberash/Desktop/Graduate School/SP23 STATS/Rep Paper/dataverse_files")
+#knitr::opts_knit$set(root.dir = "/Users/solomonaberash/Desktop/Graduate School/SP23 STATS/Rep Paper/dataverse_files")
+
+#Beza's working directory 
+knitr::opts_knit$set(root.dir = "/Users/bezataddess/Dropbox (Princeton)/Beza$SolomeReplication/Replication.stats")
+
 ```
 
 
@@ -107,8 +111,37 @@ covid_ideo_scales$restriction_postponing_primary <- recode(covid_ideo_scales$res
 #   covid_ideo_scales[,i] <- as.numeric(covid_ideo_scales[,i])
 # }
 
-#removing incomplete observations
+
+#working on the political ideology variable
+library(haven)
+library(dplyr)
+
+# Convert to regular factor vector
+covid_ideo_scales$libcon <- as_factor(covid_ideo_scales$libcon)
+
+# Recode using case_when()
+covid_ideo_scales <- covid_ideo_scales %>%
+  mutate(
+    libcon = case_when(
+      libcon == "Very conservative" ~ 1,
+      libcon == "Conservative" ~ 2,
+      libcon == "Moderate" ~ 3,
+      libcon == "Liberal" ~ 4,
+      libcon == "Very liberal" ~ 5,
+      TRUE ~ NA_real_
+    )
+  )
+
+# convert back to numeric vector
+covid_ideo_scales$libcon <- as.numeric(covid_ideo_scales$libcon) 
+
+# converting columns to numeric
+covid_ideo_scales[, 2:ncol(covid_ideo_scales)] <- lapply(covid_ideo_scales[, 2:ncol(covid_ideo_scales)], as.numeric)
+
+# removing incomplete observations
 covid_ideo_scales <- na.omit(covid_ideo_scales)
+
+
 
 ```
 
@@ -132,11 +165,9 @@ x[,4] <- as.factor(covid_ideo_scales$restriction_sporting_events)
 x[,5] <- as.factor(covid_ideo_scales$restriction_closing_k12)
 x[,6] <- as.factor(covid_ideo_scales$restriction_carry_out_only)
 x[,7] <- as.factor(covid_ideo_scales$restriction_postponing_primary)
-#x[,8] <- as.factor(covid_ideo_scales$libcon)
-#x
+x[,8] <- as.factor(covid_ideo_scales$libcon)
 
-#conducting exploratory factor analysis & plotting preliminary results
-factanal <- FAMD(x, graph = F,ncp=7,sup.var = NULL)
+factanal <- FAMD(x, graph = FALSE,ncp=8,sup.var = NULL)
 library(rstatix)
 
 fviz_screeplot(factanal)
@@ -144,6 +175,10 @@ fviz_contrib(factanal, "var", axes = 1)
 fviz_contrib(factanal, "var", axes = 2)
 fviz_contrib(factanal, "var", axes = 3)
 fviz_famd_var(factanal, "var", repel = TRUE, col.var = "black")
+
+# Run factor analysis
+factanal <- fa(covid_ideo_scales[,c(2:9)], nfactors=2, rotate="promax", fm="pa")
+
 
 factanal <- fa(covid_ideo_scales[,c(2:9)], nfactors=2, rotate="promax", fm="pa")
 scores <- data.frame(factanal$scores)
