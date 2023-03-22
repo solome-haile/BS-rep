@@ -23,11 +23,12 @@ library(moments)
 library(haven)
 library(datawizard)
 library(tidyverse)
+library(labelled)
 #setting working directory (Beza-- be sure to comments this out and set your own when you are coding!)
-#knitr::opts_knit$set(root.dir = "/Users/solomonaberash/Desktop/Graduate School/SP23 STATS/Rep Paper/dataverse_files")
+knitr::opts_knit$set(root.dir = "/Users/solomonaberash/Desktop/Graduate School/SP23 STATS/Rep Paper/dataverse_files")
 
 #Beza's working directory 
-knitr::opts_knit$set(root.dir = "/Users/bezataddess/Dropbox (Princeton)/Beza$SolomeReplication/Replication.stats")
+#knitr::opts_knit$set(root.dir = "/Users/bezataddess/Dropbox (Princeton)/Beza$SolomeReplication/Replication.stats")
 
 ```
 
@@ -54,7 +55,7 @@ pew_ATP_W64 <- subset(pew_ATP_W64,
 
 ## Coding and scaling ideological dependent variable (DV) 
 ## of interest (policy support)
-```{r, eval=FALSE}
+```{r, warning=FALSE}
 #subsetting DV data 
 covid_ideo_scales <- subset(pew_ATP_W64,
                             select=c(QKEY,COVID_RESTRICTION_a_W64,COVID_RESTRICTION_b_W64,
@@ -108,7 +109,7 @@ covid_ideo_scales$restriction_postponing_primary <- recode(covid_ideo_scales$res
 
 #transforming observations into numeric --> this doesn't work (as of 3/17) and I am not sure it is necessary considering you can just convert the data into a 0/1 numeric binary in one step (as I did in lines 78-91)
 # for(i in 2:ncol(covid_ideo_scales)){
-#   covid_ideo_scales[,i] <- as.numeric(covid_ideo_scales[,i])
+#   covid_ideo_scales[,i] <- as.factor(covid_ideo_scales[,i])
 # }
 
 
@@ -133,10 +134,10 @@ covid_ideo_scales <- covid_ideo_scales %>%
   )
 
 # convert back to numeric vector
-covid_ideo_scales$libcon <- as.numeric(covid_ideo_scales$libcon) 
+covid_ideo_scales$libcon <- as.factor(covid_ideo_scales$libcon) 
 
 # converting columns to numeric
-covid_ideo_scales[, 2:ncol(covid_ideo_scales)] <- lapply(covid_ideo_scales[, 2:ncol(covid_ideo_scales)], as.numeric)
+covid_ideo_scales[, 2:ncol(covid_ideo_scales)] <- lapply(covid_ideo_scales[, 2:ncol(covid_ideo_scales)], as.factor)
 
 # removing incomplete observations
 covid_ideo_scales <- na.omit(covid_ideo_scales)
@@ -147,7 +148,7 @@ covid_ideo_scales <- na.omit(covid_ideo_scales)
 
 
 ## Factor Analysis (policy support)
-```{r, eval=FALSE}
+```{r}
 library(FactoMineR)
 library(factoextra)
 
@@ -177,9 +178,6 @@ fviz_contrib(factanal, "var", axes = 3)
 fviz_famd_var(factanal, "var", repel = TRUE, col.var = "black")
 
 # Run factor analysis
-factanal <- fa(covid_ideo_scales[,c(2:9)], nfactors=2, rotate="promax", fm="pa")
-
-
 factanal <- fa(covid_ideo_scales[,c(2:9)], nfactors=2, rotate="promax", fm="pa")
 scores <- data.frame(factanal$scores)
 loadings(factanal)
@@ -232,24 +230,29 @@ covid_ideo_scales$summated_restriction_scale <- rowSums(covid_ideo_scales[2:8],n
 ## In this context, IRT is used to create a continuum with the various COVID policy questions and the aggregate score of a respondant's answers to the questions will proxy as an overall measure of support (which is a latent variable) for social distancing policies
 
 **NOTE: this whole chunk works but I want to know the more granular mechanics of how/why, but leave that to me**
-```{r, eval=F}
+```{r}
 irt <- mirt(covid_ideo_scales[2:8], model = 1, itemtype = "graded", SE = T, 
             verbose = T,removeEmptyRows = TRUE)
+
 plt <- plot(irt, type = 'trace', facet_items=F) #store the object
 print(plt) #plot the object
-str(plt) #find the data
+#str(plt) #find the data
 pltdata <- data.frame(lapply(plt$panel.args, function(x) do.call(cbind, x))[[1]])
 
 groups <- plot(irt, type = 'trace', facet_items=T)
-groups$packet.sizes
+#groups$packet.sizes
 pltdata$item <- rep(colnames(covid_ideo_scales)[2:8], each = 200)
 pltdata$response <- groups$panel.args.common$groups
 
-plt$panel.args.common$groups
+#plt$panel.args.common$groups
 
 pltdata$item2 <- factor(pltdata$item,levels=c("restriction_carry_out_only",
-                                              "restriction_closing_k12","restriction_intl_travel","restriction_large_gatherings",
-                                              "restriction_most_business","restriction_postponing_primary","restriction_sporting_events"),
+                                              "restriction_closing_k12",
+                                              "restriction_intl_travel",
+                                              "restriction_large_gatherings",
+                                              "restriction_most_business",
+                                              "restriction_postponing_primary",
+                                              "restriction_sporting_events"),
                         labels=c("Carry Out Only","Close K-12 Schools",
                                  "Restrict Intl. Travel","Restrict Large Gatherings",
                                  "Restrict Most Businesses","Postpone Primary Elections",
@@ -284,33 +287,43 @@ plot <- ggplot(pltdata, aes(x, y,linetype=item2,color=item2)) +
 covid_ideo_scales$covid_restriction_fa_dim2 <- fscores(irt, full.scores = TRUE, full.scores.SE = F)
 colnames(covid_ideo_scales)[11] <- "covid_restriction_irt"
 
+# colnames(covid_ideo_scales)
+# colnames(pew_ATP_W64)
+
 #merging with original data set 
 pew_ATP_W64 <- merge(pew_ATP_W64,covid_ideo_scales,by=c("QKEY"),all=T)
-pew_ATP_W64$covid_restriction_fa_dim1 <- pew_ATP_W64$covid_restriction_fa_dim1-mean(pew_ATP_W64$covid_restriction_fa_dim1,na.rm=T)
+pew_ATP_W64$covid_restriction_fa_dim1 <- pew_ATP_W64$covid_restriction_fa_dim1- mean(pew_ATP_W64$covid_restriction_fa_dim1,na.rm=T)
 ```
 
 ## Covariates
 
-**whole thing runs! but not properly, so I will have to come back to this**
-```{r, eval=F}
+**whole thing runs!**
+```{r}
 #transforming gender covariate & plotting
 pew_ATP_W64$female <- as.character(pew_ATP_W64$F_SEX)
+pew_ATP_W64$female <- recode(pew_ATP_W64$female, "1" = "Male", "2"= "Female")
 pew_ATP_W64$female <- factor(pew_ATP_W64$female,levels=c("Male","Female"))
 
-ggplot(na.omit(pew_ATP_W64),aes(x=female,y=covid_restriction_fa_dim1)) + geom_boxplot()
+df_64 <- as.data.frame(cbind(pew_ATP_W64$female, pew_ATP_W64$covid_restriction_fa_dim1))
+
+ggplot(data= na.omit(df_64),
+       aes(x=as.factor(V1),y= V2)) + geom_boxplot() + 
+  labs(title = "Boxplot of Sex Covariate of Wave 64",
+       x= "Sex (Male=1, Female=2)",
+       y= "covid_restriction_fa_dim1")
 
 #transforming political identification & using to create weights
 pew_ATP_W64$pid3 <- as.character(pew_ATP_W64$F_PARTY_FINAL)
 pew_ATP_W64$pid3 <- factor(pew_ATP_W64$pid3,levels=c("Republican","Independent","Democrat"))
 
-pew_ATP_W64$weight <- as.numeric(pew_ATP_W64$WEIGHT_W64)
+pew_ATP_W64$weight <- as.factor(pew_ATP_W64$WEIGHT_W64)
 
 #transforming & cleaning age covariate
-pew_ATP_W64$age_linear <- as.numeric(factor(pew_ATP_W64$F_AGECAT))
+pew_ATP_W64$age_linear <- as.factor(factor(pew_ATP_W64$F_AGECAT))
 pew_ATP_W64$age_linear[pew_ATP_W64$age_linear %in% 5] <- NA # Get rid of refused
 
 #transforming & cleaning education covariate
-pew_ATP_W64$educ_linear <- as.numeric(factor(pew_ATP_W64$F_EDUCCAT2))
+pew_ATP_W64$educ_linear <- as.factor(factor(pew_ATP_W64$F_EDUCCAT2))
 pew_ATP_W64$educ_linear[pew_ATP_W64$educ_linear %in% 7] <- NA # Get rid of refused
 
 #transforming & cleaning marital covariate
@@ -318,7 +331,7 @@ pew_ATP_W64$marital_status <- ifelse(pew_ATP_W64$F_MARITAL %in% "Married",1,0)
 pew_ATP_W64$marital_status[pew_ATP_W64$F_MARITAL %in% "Refused"] <- NA # Get rid of refused
 
 #transforming & cleaning income covariate
-pew_ATP_W64$income_linear <- as.numeric(factor(pew_ATP_W64$F_INCOME))
+pew_ATP_W64$income_linear <- as.factor(factor(pew_ATP_W64$F_INCOME))
 pew_ATP_W64$income_linear[pew_ATP_W64$income_linear %in% 10] <- NA # Get rid of refused
 
 #transforming & cleaning region & white race covariates
@@ -341,13 +354,14 @@ pew_ATP_W64$race3 <- factor(pew_ATP_W64$race3,levels=c("white","black","hispanic
 
 
 ## Trust
-```{r, eval=F}
+```{r}
 #loading trust data from wave 42
 trust <- read_dta("ATP_W42.dta")
 trust <- subset(trust,select=c("QKEY","CONFa_W42","CONFb_W42","CONFd_F1_W42",
                                "CONFd_F2_W42", "POLICY1_W42","POLICY2_W42",
                                "POLICY3_W42","SCM2_W42","SCM3_W42","SCM4a_W42",
                                "SCM4b_W42"))
+str(trust)
 
 colnames(trust) <- c("QKEY","trust_elected_officials","trust_media",
                      "trust_medial_scientists","trust_scientists",
@@ -356,20 +370,37 @@ colnames(trust) <- c("QKEY","trust_elected_officials","trust_media",
                      "scientists_judgement_facts","research_essential_immediate_applications",
                      "research_essential_advance_knowledge")
 
+#recoding into character because loops below didn't work
+trust$trust_elected_officials <- as.character(trust$trust_elected_officials)
+trust$trust_media <- as.character(trust$trust_media)
+trust$trust_medial_scientists <- as.character(trust$trust_medial_scientists)
+trust$trust_scientists <- as.character(trust$trust_scientists)
+trust$scientists_active_role_policy <- as.character(trust$scientists_active_role_policy)
+trust$scientists_pivotal_policy <- as.character(trust$scientists_pivotal_policy)
+trust$scientists_better_policy <- as.character(trust$scientists_better_policy)
+trust$scientific_method <- as.character(trust$scientific_method)
+trust$scientists_judgement_facts <- as.character(trust$scientists_judgement_facts )
+trust$research_essential_immediate_applications <- as.character(trust$research_essential_immediate_applications)
+trust$research_essential_advance_knowledge <- as.character(trust$research_essential_advance_knowledge)
+
+#omitting non-responses # this doesn't work because it's already coded as NA, but "refused"
+#trust[trust$trust_elected_officials == "Refused"] <- NA 
+
+
+# #adding levels
+# for(i in 2:ncol(trust)){
+#   print(table(trust[,i]))
+#   print(trust[,i])
+# }
+# for(i in 2:ncol(trust)){
+#   trust[,i] <- as.character(trust[,i])
+#   print(trust[,i])
+# }
+
 #omitting non-responses 
-trust[trust == "Refused"] <- NA
+trust[trust == "Refused"] <- NA 
 
-#adding levels
-for(i in 2:ncol(trust)){
-  print(table(trust[,i]))
-  print(levels(trust[,i]))
-}
-for(i in 2:ncol(trust)){
-  trust[,i] <- as.character(trust[,i])
-  print(table(trust[,i]))
-}
-
-#recoding responses to each trust survey question
+#recoding responses to each trust survey question 
 trust[trust == "Essential"] <- 4
 trust[trust == "Important, but not essential"] <- 3
 trust[trust == "Not too important"] <- 2
@@ -396,17 +427,54 @@ trust[trust == "The scientific method can be used to produce any conclusion the 
 trust[trust == "Scientists make judgments based solely on the facts"] <- 2
 trust[trust == "Scientists' judgments are just as likely to be biased as other people's"] <- 1
 
+#indicating incomplete observations as NA
 trust$trust_scientists <- ifelse(is.na(trust$trust_medial_scientists),trust$trust_scientists,
                                  ifelse(is.na(trust$trust_scientists),trust$trust_medial_scientists,NA))
 
 trust$trust_medial_scientists <- NULL
 trust$scientists_pivotal_policy <- NULL
 
-for(i in 2:ncol(trust)){
-  trust[,i] <- as.numeric(trust[,i])
-  print(table(trust[,i]))
-}  
+#recoding into factor
+# for(i in 2:ncol(trust)){
+#   trust[,i] <- as_factor(trust[,i])
+#   print(trust[,i])
+# }
 
+#recoding maually into factor because loop above did not work
+trust$trust_elected_officials <- as.factor(trust$trust_elected_officials)
+trust$trust_media <- as.factor(trust$trust_media)
+#trust$trust_medial_scientists <- as.factor(trust$trust_medial_scientists)
+trust$trust_scientists <- as.factor(trust$trust_scientists)
+trust$scientists_active_role_policy <- as.factor(trust$scientists_active_role_policy)
+#trust$scientists_pivotal_policy <- as.factor(trust$scientists_pivotal_policy)
+trust$scientists_better_policy <- as.factor(trust$scientists_better_policy)
+trust$scientific_method <- as.factor(trust$scientific_method)
+trust$scientists_judgement_facts <- as.factor(trust$scientists_judgement_facts )
+trust$research_essential_immediate_applications <- as.factor(trust$research_essential_immediate_applications)
+trust$research_essential_advance_knowledge <- as.factor(trust$research_essential_advance_knowledge)
+
+
+#recoding into numeric
+# for(i in 2:ncol(trust)){
+#   trust[,i] <- as.numeric(trust[,i])
+#   print(table(trust[,i]))
+# } 
+
+#recoding maually into numeric because loop above did not work
+trust$trust_elected_officials <- as.numeric(trust$trust_elected_officials)
+trust$trust_media <- as.numeric(trust$trust_media)
+#trust$trust_medial_scientists <- as.numeric(trust$trust_medial_scientists)
+trust$trust_scientists <- as.numeric(trust$trust_scientists)
+trust$scientists_active_role_policy <- as.numeric(trust$scientists_active_role_policy)
+#trust$scientists_pivotal_policy <- as.numeric(trust$scientists_pivotal_policy)
+trust$scientists_better_policy <- as.numeric(trust$scientists_better_policy)
+trust$scientific_method <- as.numeric(trust$scientific_method)
+trust$scientists_judgement_facts <- as.numeric(trust$scientists_judgement_facts )
+trust$research_essential_immediate_applications <- as.numeric(trust$research_essential_immediate_applications)
+trust$research_essential_advance_knowledge <- as.numeric(trust$research_essential_advance_knowledge)
+
+
+#conducting factor analysis to generate factor analysis plots
 factanal <- fa(trust[,c(4:10)], nfactors=2, rotate="promax", fm="pa")
 scores <- data.frame(factanal$scores)
 loadings(factanal)
@@ -429,8 +497,12 @@ kurtosis(loadings$f2, na.rm=T)
 loadings$vars <- ifelse(rownames(loadings) %in% "trust_scientists","Trust Scientists",ifelse(rownames(loadings) %in% "scientists_active_role_policy","Scientists Active Role Policy",ifelse(rownames(loadings) %in% "scientists_pivotal_policy","PO Guiding Policy Science",ifelse(rownames(loadings) %in% "scientists_better_policy","Scientists Better Policymakers",ifelse(rownames(loadings) %in% "scientific_method","Scientific Method Validity",ifelse(rownames(loadings) %in% "scientists_judgement_facts","Unbiased Scientists",ifelse(rownames(loadings) %in% "research_essential_immediate_applications","Research Essential Applications",ifelse(rownames(loadings) %in% "research_essential_advance_knowledge","Research Essential Knowledge",NA))))))))
 
 plot <- ggplot(loadings,aes(x = f1, y=f2,label=vars)) + theme_minimal() + geom_label_repel() + scale_x_continuous("First Dimension Factor") + scale_y_continuous("Second Dimension Factor") + geom_segment(aes(x = 0,y = 0,xend = f1,yend = f2),arrow=arrow())  # (Proportion of Variance F1: 18%) (Propoportion of F2 Variance 16%)"
+library(grid)
 grid.newpage()
+
 footnote <- expression("Cronbach's Standardized"~alpha~"="~0.66)
+
+library(gridExtra)
 g <- arrangeGrob(plot, bottom = textGrob(footnote, x = 0.025, hjust = 0, vjust= 0, y=0.75, gp = gpar(fontface = "italic", fontsize = 9, col = "black")))
 grid.draw(g)
 #ggsave(file="factor_analysis_scientific_trust.png", g, width = 8, height = 5.43, units = "in")
@@ -440,20 +512,20 @@ colnames(trust)[11:12] <- c("trust_scientists_fa_dim1","trust_scientists_fa_dim2
 
 pew_ATP_W64 <- merge(pew_ATP_W64,trust,by=c("QKEY"),all=T)
 
-x <- subset(pew_ATP_W64,select=c(pid3,trust_scientists_fa_dim1,trust_scientists_fa_dim2))
-x <- na.omit(x)
-x$pid <- ifelse(x$pid3 %in% "Democrat","D",ifelse(x$pid3 %in% "Republican","R",ifelse(x$pid3 %in% "Independent","I",NA)))
+x0 <- subset(pew_ATP_W64,select=c(pid3,trust_scientists_fa_dim1,trust_scientists_fa_dim2))
+x0 <- na.omit(x0)
+x0$pid <- ifelse(x0$pid3 %in% "Democrat","D",ifelse(x0$pid3 %in% "Republican","R",ifelse(x0$pid3 %in% "Independent","I",NA)))
 
-plot <- ggplot(x,aes(x=trust_scientists_fa_dim1,y=trust_scientists_fa_dim2,label=pid,color=pid)) + geom_text(alpha=0.2) + scale_color_manual("",values=c("blue","purple","red"))
+plot <- ggplot(x0,aes(x=trust_scientists_fa_dim1,y=trust_scientists_fa_dim2,label=pid,color=pid)) + geom_text(alpha=0.2) + scale_color_manual("",values=c("blue","purple","red"))
 
-x1 <- x
+x1 <- x0
 x1$pid3 <- "Full Sample"
-x <- rbind(x,x1)
-x$pid3 <- factor(x$pid3,levels=c("Republican","Independent","Democrat","Full Sample"),labels=c("Republican Partisans","Independent Partisans","Democratic Partisans","Full Sample"))
+x_ <- rbind(x0,x1)
+x_$pid3 <- factor(x_$pid3,levels=c("Republican","Independent","Democrat","Full Sample"),labels=c("Republican Partisans","Independent Partisans","Democratic Partisans","Full Sample"))
 
-print(summary(aov(trust_scientists_fa_dim1 ~ pid3, data = x)))
+print(summary(aov(trust_scientists_fa_dim1 ~ pid3, data = x_)))
 
-plot <- ggplot(x, aes(x=pid3,y=trust_scientists_fa_dim1, group=pid3,fill=pid3)) + geom_boxplot(alpha=0.2) + theme_minimal() + scale_y_continuous("Latent Scientific Trust") + scale_x_discrete("") + scale_fill_manual("",values=c("red","purple","blue","black")) + theme(legend.position = "none") 
+plot <- ggplot(x_, aes(x=pid3,y=trust_scientists_fa_dim1, group=pid3,fill=pid3)) + geom_boxplot(alpha=0.2) + theme_minimal() + scale_y_continuous("Latent Scientific Trust") + scale_x_discrete("") + scale_fill_manual("",values=c("red","purple","blue","black")) + theme(legend.position = "none") 
 #ggsave(file="scientific_trust_boxplots_by_party.png", plot, width = 8, height = 5.43, units = "in")
 ```
 
@@ -462,10 +534,10 @@ plot <- ggplot(x, aes(x=pid3,y=trust_scientists_fa_dim1, group=pid3,fill=pid3)) 
 ## Baseline Trust Effects
 ```{r, eval=FALSE}
 baseline_trust_effects <- list()
-for(i in which(colnames(pew) == "restriction_intl_travel"):which(colnames(pew) == "restriction_postponing_primary")){
-  summary(model <- glm(pew[,i] ~ trust_scientists_fa_dim1 + trust_media + trust_elected_officials + female + pid3 + libcon + age_linear + educ_linear + income_linear + race3 + region_factor, data=pew, weights=weight, family = binomial(link = "logit")))
+for(i in which(colnames(pew_ATP_W64) == "restriction_intl_travel"):which(colnames(pew_ATP_W64) == "restriction_postponing_primary")){
+  summary(model <- glm(pew_ATP_W64[,i] ~ trust_scientists_fa_dim1 + trust_media + trust_elected_officials + female + pid3 + libcon + age_linear + educ_linear + income_linear + race3 + region_factor, data=pew_ATP_W64, weights=weight, family = binomial(link = "logit")))
   mes <- summary(margins(model, variables=c("trust_scientists_fa_dim1","trust_media","trust_elected_officials"), type="response", change="minmax"))
-  mes$model <- colnames(pew)[i]
+  mes$model <- colnames(pew_ATP_W64)[i]
   mes$category <- "Full Sample Baseline"
   baseline_trust_effects[[i]] <- mes
 }
@@ -514,8 +586,8 @@ for(i in unique(effects$model)){
 
 
 ## Distribution of Summated Rating Scales
-```{r}
-x <- subset(pew,select=c(summated_restriction_scale,trust_scientists_fa_dim1,pid3,trust_media,trust_elected_officials,female,libcon,age_linear,educ_linear,income_linear,white_respondent,region_factor,race3))
+```{r, eval=F}
+x <- subset(pew_ATP_W64,select=c(summated_restriction_scale,trust_scientists_fa_dim1,pid3,trust_media,trust_elected_officials,female,libcon,age_linear,educ_linear,income_linear,white_respondent,region_factor,race3))
 x1 <- na.omit(x)
 x <- na.omit(x)
 x1$race3 <- "Full Sample"
@@ -546,12 +618,12 @@ plot <- ggplot(x, aes(x=factor(summated_restriction_scale), y=prop, label=round(
 # Data Analysis: COVID Policy ~ Scientific Trust: Baseline Effects
 
 ## Baseline Trust Effects
-```{r}
+```{r, eval=F}
 baseline_trust_effects.race <- list()
-for(i in which(colnames(pew) == "restriction_intl_travel"):which(colnames(pew) == "restriction_postponing_primary")){
-  summary(model <- glm(pew[,i] ~ trust_scientists_fa_dim1*race3 + trust_media + trust_elected_officials + female + pid3 + libcon + age_linear + educ_linear + income_linear + region_factor, data=pew, weights=weight, family = binomial(link = "logit")))
+for(i in which(colnames(pew_ATP_W64) == "restriction_intl_travel"):which(colnames(pew_ATP_W64) == "restriction_postponing_primary")){
+  summary(model <- glm(pew_ATP_W64[,i] ~ trust_scientists_fa_dim1*race3 + trust_media + trust_elected_officials + female + pid3 + libcon + age_linear + educ_linear + income_linear + region_factor, data=pew_ATP_W64, weights=weight, family = binomial(link = "logit")))
   mes <- summary(margins(model, variables=c("trust_scientists_fa_dim1","trust_media","trust_elected_officials"),at=list(race3=c("asian","black","white","hispanic")), type="response", change="minmax",))
-  mes$model <- colnames(pew)[i]
+  mes$model <- colnames(pew_ATP_W64)[i]
   mes$category <- "Full Sample Baseline"
   baseline_trust_effects.race[[i]] <- mes
 }
@@ -576,8 +648,8 @@ for(i in unique(effects$model)){
 
 
 # Data Analysis Figures: OLS Composite Models
-```{r}
-summary(model <- glm(covid_restriction_irt ~ trust_scientists_fa_dim1*race3 + trust_media*race3 + trust_elected_officials*race3 + female + libcon + age_linear + educ_linear + income_linear + region_factor, data=pew, weights=weight, family = gaussian(identity)))
+```{r, eval=F}
+summary(model <- glm(covid_restriction_irt ~ trust_scientists_fa_dim1*race3 + trust_media*race3 + trust_elected_officials*race3 + female + libcon + age_linear + educ_linear + income_linear + region_factor, data=pew_ATP_W64, weights=weight, family = gaussian(identity)))
 baseline_trust_effects.4 <- summary(margins(model, variables=c("trust_scientists_fa_dim1","trust_media","trust_elected_officials"),at=list(race3=c("asian","white","black","hispanic")), type="response", change="minmax"))
 baseline_trust_effects.4$model <- "DV: Latent Policy Scale"
 baseline_trust_effects.4$pid3 <- "Full Sample"
@@ -594,7 +666,7 @@ plot <- ggplot(effects,aes(x=race3,y=AME,factor=factor,group=factor,color=factor
 print(plot)
 #ggsave(file="latent_policy_scale_race3_model.png", plot, width = 8, height = 5.43, units = "in")
 
-summary(model <- glm(summated_restriction_scale ~ trust_scientists_fa_dim1*race3 + trust_media*race3 + trust_elected_officials*race3 + female + libcon + age_linear + educ_linear + income_linear + region_factor, data=pew, weights=weight, family = gaussian(identity)))
+summary(model <- glm(summated_restriction_scale ~ trust_scientists_fa_dim1*race3 + trust_media*race3 + trust_elected_officials*race3 + female + libcon + age_linear + educ_linear + income_linear + region_factor, data=pew_ATP_W64, weights=weight, family = gaussian(identity)))
 baseline_trust_effects.5 <- summary(margins(model, variables=c("trust_scientists_fa_dim1","trust_media","trust_elected_officials"),at=list(race3=c("asian","white","black","hispanic")), type="response", change="minmax"))
 baseline_trust_effects.5$model <- "DV: Summated Policy Scale"
 baseline_trust_effects.5$pid3 <- "Full Sample"
@@ -614,11 +686,11 @@ print(plot)
 
 
 ## Boxplot by Race
-```{r}
-x <- subset(pew,select=c(race3,trust_scientists_fa_dim1))
+```{r, eval=F}
+x <- subset(pew_ATP_W64,select=c(race3,trust_scientists_fa_dim1))
 x <- na.omit(x)
 print(summary(aov(trust_scientists_fa_dim1 ~ race3, data = x)))
-y <- subset(pew,select=c(race3,trust_scientists_fa_dim1))
+y <- subset(pew_ATP_W64,select=c(race3,trust_scientists_fa_dim1))
 y$race3 <- "Full Sample"
 x <- rbind(x,y)
 
@@ -627,8 +699,8 @@ plot <- ggplot(x, aes(x=race3,y=trust_scientists_fa_dim1, group=race3,fill=race3
 ```
 
 # Data Analysis Figures: OLS Composite Models
-```{r}
-summary(model <- lm(trust_scientists_fa_dim1 ~ female + pid3 + libcon + age_linear + educ_linear + income_linear + race3 + region_factor, data=pew, weights=weight))
+```{r, eval=F}
+summary(model <- lm(trust_scientists_fa_dim1 ~ female + pid3 + libcon + age_linear + educ_linear + income_linear + race3 + region_factor, data=pew_ATP_W64, weights=weight))
 
 mes <- summary(margins(model, type="response", change="minmax"))
 mes$race3 <- factor(mes$factor,levels=c("race3asian","race3black","race3hispanic"),labels=c("Asian Respondents","Black Respondents","Hispanic Respondents"))
