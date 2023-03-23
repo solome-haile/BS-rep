@@ -354,7 +354,12 @@ colnames(trust) <- c("QKEY","trust_elected_officials","trust_media",
                      "research_essential_advance_knowledge")
 
 #omitting non-responses 
-trust[trust == "Refused"] <- NA
+#trust[trust == "Refused"] <- NA
+
+trust <- trust %>% 
+  mutate(across(everything(), factor)) %>% 
+  mutate_all(~ ifelse(.x == "Refused", NA, as.numeric(as.character(.x))))
+
 
 #adding levels
 for(i in 2:ncol(trust)){
@@ -399,10 +404,11 @@ trust$trust_scientists <- ifelse(is.na(trust$trust_medial_scientists),trust$trus
 trust$trust_medial_scientists <- NULL
 trust$scientists_pivotal_policy <- NULL
 
+summary(trust)
+
 for(i in 2:ncol(trust)){
   trust[,i] <- as.numeric(trust[,i])
   print(table(trust[,i]))
-}  
 
 factanal <- fa(trust[,c(4:10)], nfactors=2, rotate="promax", fm="pa")
 scores <- data.frame(factanal$scores)
