@@ -278,7 +278,7 @@ plot <- ggplot(pltdata, aes(x, y,linetype=item2,color=item2)) +
 
 ## Scores= the scores generated from the IRT continuum for each of the respondants (this is the ultimate support for social distancing policy that serves as the DV)
 
-**whole thing runs!**
+**whole thing runs!: March 22**
 ```{r}
 #storing scores from IRT analysis for each respondent in original covid scales data
 covid_ideo_scales$covid_restriction_fa_dim2 <- fscores(irt, full.scores = TRUE, full.scores.SE = F)
@@ -287,6 +287,8 @@ colnames(covid_ideo_scales)[11] <- "covid_restriction_irt"
 #merging with original data set 
 pew_ATP_W64 <- merge(pew_ATP_W64,covid_ideo_scales,by=c("QKEY"),all=T)
 pew_ATP_W64$covid_restriction_fa_dim1 <- pew_ATP_W64$covid_restriction_fa_dim1-mean(pew_ATP_W64$covid_restriction_fa_dim1,na.rm=T)
+
+
 ```
 
 ## Covariates
