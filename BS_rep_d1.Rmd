@@ -186,7 +186,7 @@ loadings <- data.frame(f1 = loadings[,1],f2=loadings[,2])
 
 plot(factanal$loadings,type="n") # set up plot 
 text(factanal$loadings,labels=names(covid_ideo_scales)[2:9],cex=.7) # add variable names
-
+#gh
 library(ggrepel)
 
 alpha(covid_ideo_scales[,c(2:9)])
