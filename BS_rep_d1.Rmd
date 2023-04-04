@@ -25,10 +25,10 @@ library(datawizard)
 library(tidyverse)
 library(labelled)
 #setting working directory (Beza-- be sure to comments this out and set your own when you are coding!)
-knitr::opts_knit$set(root.dir = "/Users/solomonaberash/Desktop/Graduate School/SP23 STATS/Rep Paper/dataverse_files")
+#knitr::opts_knit$set(root.dir = "/Users/solomonaberash/Desktop/Graduate School/SP23 STATS/Rep Paper/dataverse_files")
 
 #Beza's working directory 
-#knitr::opts_knit$set(root.dir = "/Users/bezataddess/Dropbox (Princeton)/Beza$SolomeReplication/Replication.stats")
+knitr::opts_knit$set(root.dir = "/Users/bezataddess/Dropbox (Princeton)/Beza$SolomeReplication/Replication.stats")
 
 ```
 
@@ -113,10 +113,6 @@ covid_ideo_scales$restriction_postponing_primary <- recode(covid_ideo_scales$res
 # }
 
 
-#working on the political ideology variable
-library(haven)
-library(dplyr)
-
 # Convert to regular factor vector
 covid_ideo_scales$libcon <- as_factor(covid_ideo_scales$libcon)
 
@@ -179,7 +175,13 @@ fviz_famd_var(factanal, "var", repel = TRUE, col.var = "black")
 covid_ideo_scales <- sapply(covid_ideo_scales, as.numeric)
 
 # Run factor analysis
-factanal <- fa(covid_ideo_scales[,c(2:9)], nfactors=2, rotate="promax", fm="pa")
+# Convert data to numeric format
+covid_ideo_scales <- sapply(covid_ideo_scales, as.numeric)
+
+# Run factor analysis
+factanal <- fa(covid_ideo_scales[,2:9], nfactors=2, rotate="promax", fm="pa")
+
+#factanal <- fa(covid_ideo_scales[,c(2:9)], nfactors=2, rotate="promax", fm="pa")
 scores <- data.frame(factanal$scores)
 loadings(factanal)
 loadings <- factanal$loadings
@@ -454,6 +456,7 @@ trust$scientists_pivotal_policy <- NULL
 
 
 
+
 # for(i in 2:ncol(trust)){
 #   trust[,i] <- as.numeric(trust[,i])
 #   print(table(trust[,i]))
@@ -529,18 +532,32 @@ grid.draw(g)
 trust <- cbind(trust,scores)
 colnames(trust)[11:12] <- c("trust_scientists_fa_dim1","trust_scientists_fa_dim2")
 
-pew_ATP_W64 <- merge(pew_ATP_W64,trust,by=c("QKEY"),all=T)
+pew_ATP_W64_trust <- merge(pew_ATP_W64, trust, by =c("QKEY"), all=T)
 
-x0 <- subset(pew_ATP_W64,select=c(pid3,trust_scientists_fa_dim1,trust_scientists_fa_dim2))
+x0 <- subset(pew_ATP_W64_trust,select=c(pid3,trust_scientists_fa_dim1,trust_scientists_fa_dim2))
 x0 <- na.omit(x0)
 x0$pid <- ifelse(x0$pid3 %in% "Democrat","D",ifelse(x0$pid3 %in% "Republican","R",ifelse(x0$pid3 %in% "Independent","I",NA)))
 
 plot <- ggplot(x0,aes(x=trust_scientists_fa_dim1,y=trust_scientists_fa_dim2,label=pid,color=pid)) + geom_text(alpha=0.2) + scale_color_manual("",values=c("blue","purple","red"))
 
-x1 <- x0
-x1$pid3 <- "Full Sample"
-x_ <- rbind(x0,x1)
-x_$pid3 <- factor(x_$pid3,levels=c("Republican","Independent","Democrat","Full Sample"),labels=c("Republican Partisans","Independent Partisans","Democratic Partisans","Full Sample"))
+# create an empty data frame
+x_ <- data.frame()
+
+# create a new row with values
+new_row <- data.frame(pid3 = "Full Sample")
+
+# add the new row to the data frame
+x_ <- rbind(x_, new_row)
+
+# update the factor levels
+x_$pid3 <- factor(x_$pid3, levels = c("Republican", "Independent", "Democrat", "Full Sample"), 
+                  labels = c("Republican Partisans", "Independent Partisans", "Democratic Partisans", "Full Sample"))
+
+
+#x1 <- x0
+# x1$pid3 <- "Full Sample"
+# x_ <- rbind(x0,x1)
+# x_$pid3 <- factor(x_$pid3,levels=c("Republican","Independent","Democrat","Full Sample"),labels=c("Republican Partisans","Independent Partisans","Democratic Partisans","Full Sample"))
 
 print(summary(aov(trust_scientists_fa_dim1 ~ pid3, data = x_)))
 
