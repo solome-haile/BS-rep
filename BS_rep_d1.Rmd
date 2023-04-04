@@ -138,8 +138,6 @@ covid_ideo_scales[, 2:ncol(covid_ideo_scales)] <- lapply(covid_ideo_scales[, 2:n
 # removing incomplete observations
 covid_ideo_scales <- na.omit(covid_ideo_scales)
 
-
-
 ```
 
 
@@ -172,6 +170,9 @@ fviz_contrib(factanal, "var", axes = 1)
 fviz_contrib(factanal, "var", axes = 2)
 fviz_contrib(factanal, "var", axes = 3)
 fviz_famd_var(factanal, "var", repel = TRUE, col.var = "black")
+
+# Convert data to numeric format
+covid_ideo_scales <- sapply(covid_ideo_scales, as.numeric)
 
 # Run factor analysis
 # Convert data to numeric format
@@ -283,7 +284,7 @@ plot <- ggplot(pltdata, aes(x, y,linetype=item2,color=item2)) +
 
 ## Scores= the scores generated from the IRT continuum for each of the respondants (this is the ultimate support for social distancing policy that serves as the DV)
 
-**whole thing runs!: March 22**
+**whole thing runs!**
 ```{r}
 #storing scores from IRT analysis for each respondent in original covid scales data
 covid_ideo_scales$covid_restriction_fa_dim2 <- fscores(irt, full.scores = TRUE, full.scores.SE = F)
@@ -307,18 +308,23 @@ pew_ATP_W64$female <- as.character(pew_ATP_W64$F_SEX)
 pew_ATP_W64$female <- recode(pew_ATP_W64$female, "1" = "Male", "2"= "Female")
 pew_ATP_W64$female <- factor(pew_ATP_W64$female,levels=c("Male","Female"))
 
-df_64 <- as.data.frame(cbind(pew_ATP_W64$female, pew_ATP_W64$covid_restriction_fa_dim1))
 
-ggplot(data= na.omit(df_64),
+
+ggplot(data= na.omit(as.data.frame(cbind(pew_ATP_W64$female, pew_ATP_W64$covid_restriction_fa_dim1))),
        aes(x=as.factor(V1),y= V2)) + geom_boxplot() + 
   labs(title = "Boxplot of Sex Covariate of Wave 64",
        x= "Sex (Male=1, Female=2)",
        y= "covid_restriction_fa_dim1")
 
-#transforming political identification & using to create weights
+#transforming political identification 
 pew_ATP_W64$pid3 <- as.character(pew_ATP_W64$F_PARTY_FINAL)
-pew_ATP_W64$pid3 <- factor(pew_ATP_W64$pid3,levels=c("Republican","Independent","Democrat"))
+#pew_ATP_W64$pid3 <- factor(pew_ATP_W64$pid3,levels=c("Republican","Independent","Democrat")) #this was making all the values NA for some reason
+pew_ATP_W64$pid3 <- case_when(pew_ATP_W64$pid3 == 1 ~ "Republican",
+                              pew_ATP_W64$pid3 == 2 ~ "Independent",
+                              pew_ATP_W64$pid3 == 3 ~ "Democrat")
 
+pew_ATP_W64$pid3 <- as.factor(pew_ATP_W64$pid3)
+  
 pew_ATP_W64$weight <- as.factor(pew_ATP_W64$WEIGHT_W64)
 
 #transforming & cleaning age covariate
@@ -348,8 +354,18 @@ hold <- hold[,c("QKEY", "F_RACECMB")]
 
 pew_ATP_W64 <- merge(pew_ATP_W64,hold,by=c("QKEY"),all=T)
 
-pew_ATP_W64$race3 <- ifelse(pew_ATP_W64$F_RACETHN %in% "White non-Hispanic","white",ifelse(pew_ATP_W64$F_RACETHN %in% "Black non-Hispanic","black",ifelse(pew_ATP_W64$F_RACETHN %in% "Hispanic","hispanic",NA)))
-pew_ATP_W64$race3 <- ifelse(is.na(pew_ATP_W64$race3) & pew_ATP_W64$F_RACECMB %in% "Asian or Asian-American","asian",pew_ATP_W64$race3)
+#did not work so used case_when
+#pew$race3 <- ifelse(pew$F_RACETHN %in% "White non-Hispanic","white",ifelse(pew$F_RACETHN %in% "Black non-Hispanic","black",ifelse(pew$F_RACETHN %in% "Hispanic","hispanic",NA)))
+
+pew_ATP_W64$race3 <- as.factor(pew_ATP_W64$F_RACETHN)
+
+pew_ATP_W64$race3 <- case_when(pew_ATP_W64$race3 == "1" ~ "white",
+                                   pew_ATP_W64$race3 =="2" ~ "black",
+                                   pew_ATP_W64$race3 == "3" ~ "hispanic")
+
+sum(is.na(pew_ATP_W64$race3))
+
+pew_ATP_W64$race3 <- ifelse(is.na(pew_ATP_W64$race3) & pew_ATP_W64$F_RACECMB %in% 3,"asian",pew_ATP_W64$race3)
 
 pew_ATP_W64$race3 <- factor(pew_ATP_W64$race3,levels=c("white","black","hispanic","asian"))
 ```
@@ -440,12 +456,13 @@ trust$scientists_pivotal_policy <- NULL
 
 
 
-#for(i in 2:ncol(trust)){
- # trust[,i] <- as.numeric(trust[,i])
- # print(table(trust[,i]))
+
+# for(i in 2:ncol(trust)){
+#   trust[,i] <- as.numeric(trust[,i])
+#   print(table(trust[,i]))
 
 
-#recoding maually into factor because loop above did not work
+#recoding manually into factor because loop above did not work
 trust$trust_elected_officials <- as.factor(trust$trust_elected_officials)
 trust$trust_media <- as.factor(trust$trust_media)
 #trust$trust_medial_scientists <- as.factor(trust$trust_medial_scientists)
@@ -553,13 +570,37 @@ plot <- ggplot(x_, aes(x=pid3,y=trust_scientists_fa_dim1, group=pid3,fill=pid3))
 ## Baseline Trust Effects
 ```{r, eval=FALSE}
 baseline_trust_effects <- list()
+
+#making policy support variables binary again
+pew_ATP_W64$restriction_intl_travel <- recode(pew_ATP_W64$restriction_intl_travel, 
+                            "1"= 1, "2"= 0)  
+pew_ATP_W64$restriction_most_business <- recode(pew_ATP_W64$restriction_most_business, 
+                            "1"= 1, "2"= 0) 
+pew_ATP_W64$restriction_large_gatherings <- recode(pew_ATP_W64$restriction_large_gatherings, 
+                            "1"= 1, "2"= 0)
+pew_ATP_W64$restriction_sporting_events <- recode(pew_ATP_W64$restriction_sporting_events, 
+                            "1"= 1, "2"= 0) 
+pew_ATP_W64$restriction_closing_k12 <- recode(pew_ATP_W64$restriction_closing_k12, 
+                            "1"= 1, "2"= 0) 
+pew_ATP_W64$restriction_carry_out_only <- recode(pew_ATP_W64$restriction_carry_out_only, 
+                            "1"= 1, "2"= 0) 
+pew_ATP_W64$restriction_postponing_primary <- recode(pew_ATP_W64$restriction_postponing_primary, 
+                            "1"= 1, "2"= 0)
+
+#running loop where model is run on each policy support variable w/ covariates
 for(i in which(colnames(pew_ATP_W64) == "restriction_intl_travel"):which(colnames(pew_ATP_W64) == "restriction_postponing_primary")){
-  summary(model <- glm(pew_ATP_W64[,i] ~ trust_scientists_fa_dim1 + trust_media + trust_elected_officials + female + pid3 + libcon + age_linear + educ_linear + income_linear + race3 + region_factor, data=pew_ATP_W64, weights=weight, family = binomial(link = "logit")))
+  #running model
+  summary(model <- glm(pew_ATP_W64[,i] ~ trust_scientists_fa_dim1 + trust_media + 
+                         trust_elected_officials + female + pid3 + libcon + age_linear + 
+                         educ_linear + income_linear + race3 + region_factor, data=pew_ATP_W64, 
+                       weights=as.numeric(weight), family = binomial(link = "logit")))
+  #storing model margins
   mes <- summary(margins(model, variables=c("trust_scientists_fa_dim1","trust_media","trust_elected_officials"), type="response", change="minmax"))
   mes$model <- colnames(pew_ATP_W64)[i]
   mes$category <- "Full Sample Baseline"
   baseline_trust_effects[[i]] <- mes
 }
+
 baseline_trust_effects <- ldply(baseline_trust_effects,data.frame)
 
 baseline_trust_effects$pid3 <- "Full Baseline Sample"
@@ -637,10 +678,16 @@ plot <- ggplot(x, aes(x=factor(summated_restriction_scale), y=prop, label=round(
 # Data Analysis: COVID Policy ~ Scientific Trust: Baseline Effects
 
 ## Baseline Trust Effects
-```{r, eval=F}
+```{r}
 baseline_trust_effects.race <- list()
 for(i in which(colnames(pew_ATP_W64) == "restriction_intl_travel"):which(colnames(pew_ATP_W64) == "restriction_postponing_primary")){
-  summary(model <- glm(pew_ATP_W64[,i] ~ trust_scientists_fa_dim1*race3 + trust_media + trust_elected_officials + female + pid3 + libcon + age_linear + educ_linear + income_linear + region_factor, data=pew_ATP_W64, weights=weight, family = binomial(link = "logit")))
+  #running model
+  summary(model <- glm(pew_ATP_W64[,i] ~ trust_scientists_fa_dim1*race3 + 
+                         trust_media + trust_elected_officials + female + pid3 + 
+                         libcon + age_linear + educ_linear + income_linear + 
+                         region_factor, data=pew_ATP_W64, weights=as.numeric(weight), 
+                       family = binomial(link = "logit")))
+   #storing model margins
   mes <- summary(margins(model, variables=c("trust_scientists_fa_dim1","trust_media","trust_elected_officials"),at=list(race3=c("asian","black","white","hispanic")), type="response", change="minmax",))
   mes$model <- colnames(pew_ATP_W64)[i]
   mes$category <- "Full Sample Baseline"
@@ -667,14 +714,24 @@ for(i in unique(effects$model)){
 
 
 # Data Analysis Figures: OLS Composite Models
-```{r, eval=F}
-summary(model <- glm(covid_restriction_irt ~ trust_scientists_fa_dim1*race3 + trust_media*race3 + trust_elected_officials*race3 + female + libcon + age_linear + educ_linear + income_linear + region_factor, data=pew_ATP_W64, weights=weight, family = gaussian(identity)))
-baseline_trust_effects.4 <- summary(margins(model, variables=c("trust_scientists_fa_dim1","trust_media","trust_elected_officials"),at=list(race3=c("asian","white","black","hispanic")), type="response", change="minmax"))
+```{r}
+summary(model <- glm(covid_restriction_irt ~ trust_scientists_fa_dim1*race3 + 
+                       trust_media*race3 + trust_elected_officials*race3 + female + 
+                       libcon + age_linear + educ_linear + income_linear + 
+                       region_factor, data=pew_ATP_W64, weights=as.numeric(weight), 
+                     family = gaussian(identity)))
+
+baseline_trust_effects.4 <- summary(margins(model, variables=c("trust_scientists_fa_dim1","trust_media","trust_elected_officials"),
+                                            at=list(race3=c("asian","white","black",
+                                                            "hispanic")), type="response", 
+                                            change="minmax"))
 baseline_trust_effects.4$model <- "DV: Latent Policy Scale"
 baseline_trust_effects.4$pid3 <- "Full Sample"
 
 effects <- baseline_trust_effects.4
-effects$race3 <- factor(effects$race3,levels=c("asian","black","white","hispanic"), labels=c("Asian Respondents","Black Respondents","White Respondents","Hispanic Respondents"))
+effects$race3 <- factor(effects$race3,levels=c("asian","black","white","hispanic"), 
+                        labels=c("Asian Respondents","Black Respondents",
+                                 "White Respondents","Hispanic Respondents"))
 
 effects$ylo90 <- (effects$AME - (qt(.95, 100) * effects$SE))
 effects$yhi90 <- (effects$AME + (qt(.95, 100) * effects$SE))
@@ -685,7 +742,11 @@ plot <- ggplot(effects,aes(x=race3,y=AME,factor=factor,group=factor,color=factor
 print(plot)
 #ggsave(file="latent_policy_scale_race3_model.png", plot, width = 8, height = 5.43, units = "in")
 
-summary(model <- glm(summated_restriction_scale ~ trust_scientists_fa_dim1*race3 + trust_media*race3 + trust_elected_officials*race3 + female + libcon + age_linear + educ_linear + income_linear + region_factor, data=pew_ATP_W64, weights=weight, family = gaussian(identity)))
+summary(model <- glm(summated_restriction_scale ~ trust_scientists_fa_dim1*race3 + 
+                       trust_media*race3 + trust_elected_officials*race3 + female + 
+                       libcon + age_linear + educ_linear + income_linear + 
+                       region_factor, data=pew_ATP_W64, weights=as.numeric(weight), 
+                     family = gaussian(identity)))
 baseline_trust_effects.5 <- summary(margins(model, variables=c("trust_scientists_fa_dim1","trust_media","trust_elected_officials"),at=list(race3=c("asian","white","black","hispanic")), type="response", change="minmax"))
 baseline_trust_effects.5$model <- "DV: Summated Policy Scale"
 baseline_trust_effects.5$pid3 <- "Full Sample"
@@ -713,28 +774,88 @@ y <- subset(pew_ATP_W64,select=c(race3,trust_scientists_fa_dim1))
 y$race3 <- "Full Sample"
 x <- rbind(x,y)
 
-plot <- ggplot(x, aes(x=race3,y=trust_scientists_fa_dim1, group=race3,fill=race3)) + geom_boxplot(alpha=0.2) + theme_minimal() + scale_y_continuous("Latent Scientific Trust") + scale_x_discrete("",labels=c("White Respondents","Black Respondents","Hispanic Respondents","Asian Respondents","Full Sample")) + theme(legend.position = "none") + labs(caption="ANOVA suggests significant differences in mean latent scientific trust across racial groups, p < 0.01.") + geom_jitter(aes(colour=race3),alpha=0.075) + scale_color_manual("",values=c("#F8766D","#7CAE00","#00BFC4","#529EFF","gray")) + scale_fill_manual("",values=c("#F8766D","#7CAE00","#00BFC4","#529EFF","gray"))
+plot <- ggplot(x, aes(x=race3,y=trust_scientists_fa_dim1, group=race3,fill=race3)) + 
+  geom_boxplot(alpha=0.2) + 
+  theme_minimal() + 
+  scale_y_continuous("Latent Scientific Trust") + 
+  scale_x_discrete("",labels=c("White Respondents","Black Respondents",
+                               "Hispanic Respondents","Asian Respondents","Full Sample")) + 
+  theme(legend.position = "none") + labs(caption="ANOVA suggests significant 
+                                         differences in mean latent scientific trust 
+                                         across racial groups, p < 0.01.") + 
+  geom_jitter(aes(colour=race3),alpha=0.075) + 
+  scale_color_manual("",values=c("#F8766D","#7CAE00","#00BFC4","#529EFF","gray")) + 
+  scale_fill_manual("",values=c("#F8766D","#7CAE00","#00BFC4","#529EFF","gray"))
 #ggsave(file="scientific_trust_boxplots_by_race3.png", plot, width = 8, height = 5.43, units = "in")
 ```
 
 # Data Analysis Figures: OLS Composite Models
 ```{r, eval=F}
-summary(model <- lm(trust_scientists_fa_dim1 ~ female + pid3 + libcon + age_linear + educ_linear + income_linear + race3 + region_factor, data=pew_ATP_W64, weights=weight))
+summary(model <- lm(trust_scientists_fa_dim1 ~ female + pid3 + libcon + age_linear + 
+                      educ_linear + income_linear + race3 + region_factor, data=pew_ATP_W64, 
+                    weights=as.numeric(weight)))
 
 mes <- summary(margins(model, type="response", change="minmax"))
-mes$race3 <- factor(mes$factor,levels=c("race3asian","race3black","race3hispanic"),labels=c("Asian Respondents","Black Respondents","Hispanic Respondents"))
+mes$race3 <- factor(mes$factor,levels=c("race3asian","race3black","race3hispanic"),
+                    labels=c("Asian Respondents","Black Respondents","Hispanic Respondents"))
 
-mes$label <- ifelse(mes$p < 0.01,paste(round(mes$AME,2),"***",sep=""),ifelse(mes$p < 0.05,paste(round(mes$AME,2),"**",sep=""),ifelse(mes$p < 0.10,paste(round(mes$AME,2),"*",sep=""),NA)))
+mes$label <- ifelse(mes$p < 0.01,paste(round(mes$AME,2),"***",sep=""),
+                    ifelse(mes$p < 0.05,paste(round(mes$AME,2),"**",sep=""),
+                           ifelse(mes$p < 0.10,paste(round(mes$AME,2),"*",sep=""),NA)))
 
 mes$ylo90 <- (mes$AME - (qt(.95, 100) * mes$SE))
 mes$yhi90 <- (mes$AME + (qt(.95, 100) * mes$SE))
 mes$model <- "DV: Latent Scientific Trust "
 
-plot <- ggplot(subset(mes,!is.na(mes$race3)),aes(x=race3,y=AME,factor=race3,group=race3,color=race3,shape=race3,label=label,fill=race3)) + facet_wrap(~model) + coord_flip() + geom_linerange(aes(x= race3, ymin = ylo90, ymax = yhi90), position = position_dodge(width=0.75), lwd  = 1) + geom_pointrange(aes(x= race3, ymin = lower, ymax = upper), lwd = 1/2, position = position_dodge(width=0.75),fill="white") + theme_minimal() + scale_x_discrete("") + scale_y_continuous("Marginal Effect of Race on Latent Scientific Trust")  + geom_hline(yintercept = 0, colour = gray(1/2), lty = 2) +  labs(color="Trust Effects",shape="Trust Effects") + theme(legend.position = "none") + theme(axis.text.x = element_text(hjust = 0.5),axis.text.y = element_text(hjust = 0.5)) + geom_label(vjust=-0.5,hjust=0.25,fill="white") + labs(caption="Note marginal effects relative to white respondents. \n* p < 0.1; ** p < 0.05; *** p < 0.01") + facet_wrap(~model) + scale_shape_manual("Trust Effects",values=c(23,22,21))
+plot <- ggplot(subset(mes,!is.na(mes$race3)),
+               aes(x=race3,y=AME,factor=race3,group=race3,color=race3,shape=race3,
+                   label=label,fill=race3)) + 
+  facet_wrap(~model) + 
+  coord_flip() + 
+  geom_linerange(aes(x= race3, ymin = ylo90, ymax = yhi90), 
+                 position = position_dodge(width=0.75), lwd  = 1) + 
+  geom_pointrange(aes(x= race3, ymin = lower, ymax = upper), lwd = 1/2, 
+                  position = position_dodge(width=0.75),fill="white") + 
+  theme_minimal() + scale_x_discrete("") + 
+  scale_y_continuous("Marginal Effect of Race on Latent Scientific Trust")  + 
+  geom_hline(yintercept = 0, colour = gray(1/2), lty = 2) + 
+  labs(color="Trust Effects",shape="Trust Effects") + 
+  theme(legend.position = "none") + 
+  theme(axis.text.x = element_text(hjust = 0.5),
+        axis.text.y = element_text(hjust = 0.5)) + 
+  geom_label(vjust=-0.5,hjust=0.25,fill="white") + 
+  labs(caption="Note marginal effects relative to white respondents. \n* p < 0.1; 
+       ** p < 0.05; *** p < 0.01") + 
+  facet_wrap(~model) + 
+  scale_shape_manual("Trust Effects",values=c(23,22,21))
+
 ggsave(file="latent_scientific_trust_model.png", plot, width = 8, height = 5.43, units = "in")
 
-mes <- subset(mes,!(mes$factor %in% c("region_factorWest","region_factorSouth","region_factorMidwest")))
+mes <- subset(mes,!(mes$factor %in% c("region_factorWest","region_factorSouth",
+                                      "region_factorMidwest")))
 
-plot <- ggplot(mes,aes(x=factor,y=AME,factor=factor,group=factor,label=label)) + facet_wrap(~model) + coord_flip() + geom_linerange(aes(x= factor, ymin = ylo90, ymax = yhi90), position = position_dodge(width=0.75), lwd  = 1) + geom_pointrange(aes(x= factor, ymin = lower, ymax = upper), lwd = 1/2, position = position_dodge(width=0.75),fill="white",shape=21) + theme_minimal() + scale_x_discrete("",labels=c("Age","Education","Female","Income","Liberal Ideology","Democrat","Independent","Asian Respondent","Black Respondent","Hispanic Respondent")) + scale_y_continuous("Marginal Effect of Covariates on Latent Scientific Trust")  + geom_hline(yintercept = 0, colour = gray(1/2), lty = 2) +  labs(color="Trust Effects",shape="Trust Effects") + theme(legend.position = "none") + theme(axis.text.x = element_text(hjust = 0.5),axis.text.y = element_text(hjust = 0.5)) + geom_label(vjust=-0.5,hjust=0.25,fill="white") + labs(caption="Note marginal effects for respondent race & partisanship relative to baseline factor categories. Contextual regions omitted. \nFactor Baselines: white respondents, Republican identifiers. * p < 0.1; ** p < 0.05; *** p < 0.01") + facet_wrap(~model) 
+plot <- ggplot(mes,aes(x=factor,y=AME,factor=factor,group=factor,label=label)) + 
+  facet_wrap(~model) + 
+  coord_flip() + 
+  geom_linerange(aes(x= factor, ymin = ylo90, ymax = yhi90), 
+                 position = position_dodge(width=0.75), lwd  = 1) + 
+  geom_pointrange(aes(x= factor, ymin = lower, ymax = upper), lwd = 1/2, 
+                  position = position_dodge(width=0.75),fill="white",shape=21) + 
+  theme_minimal() + 
+  scale_x_discrete("",labels=c("Age","Education","Female","Income",
+                               "Liberal Ideology","Democrat","Independent",
+                               "Asian Respondent","Black Respondent","Hispanic Respondent")) + 
+  scale_y_continuous("Marginal Effect of Covariates on Latent Scientific Trust")  + 
+  geom_hline(yintercept = 0, colour = gray(1/2), lty = 2) +  
+  labs(color="Trust Effects",shape="Trust Effects") + 
+  theme(legend.position = "none") + 
+  theme(axis.text.x = element_text(hjust = 0.5),axis.text.y = element_text(hjust = 0.5)) + 
+  geom_label(vjust=-0.5,hjust=0.25,fill="white") + 
+  labs(caption="Note marginal effects for respondent race & 
+       partisanship relative to baseline factor categories. Contextual regions 
+       omitted. \nFactor Baselines: white respondents, 
+       Republican identifiers. * p < 0.1; ** p < 0.05; *** p < 0.01") + 
+  facet_wrap(~model) 
+
 ggsave(file="latent_scientific_trust_model_full.png", plot, width = 8, height = 5.43, units = "in")
 ```
