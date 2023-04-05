@@ -726,7 +726,10 @@ print(plot)
 
 # Distribution of Summated Rating Scales
 ```{r, warning=FALSE, eval= F}
-x <- subset(pew,select=c(summated_restriction_scale,trust_scientists_fa_dim1,pid3,trust_media,trust_elected_officials,female,libcon,age_linear,educ_linear,income_linear,white_respondent,region_factor,race3))
+x <- subset(pew,select=c(summated_restriction_scale,trust_scientists_fa_dim1,
+                         pid3,trust_media,trust_elected_officials,female,libcon,
+                         age_linear,educ_linear,income_linear,white_respondent,
+                         region_factor,race3))
 x1 <- na.omit(x)
 x <- na.omit(x)
 x1$race3 <- "Full Sample"
