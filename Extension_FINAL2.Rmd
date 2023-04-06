@@ -895,7 +895,7 @@ ggsave(file="latent_scientific_trust_model_full.png", plot, width = 8, height = 
 ```
 
 
-#EVERYTHING ABOVE THIS WORKS! 
+#EVERYTHING ABOVE THIS WORKS! Adding something else
 
 
 #Incorporating a Measure of Religious Belief as Covariate (from an additional wave: wave 46)
