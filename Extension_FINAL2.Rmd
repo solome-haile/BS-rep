@@ -900,7 +900,7 @@ ggsave(file="latent_scientific_trust_model_full.png", plot, width = 8, height = 
 
 #Incorporating a Measure of Religious Belief as Covariate (from an additional wave: wave 46)
 
-```{r, eval=FALSE}
+```{r}
 # load the foreign package to read wa
 library(foreign)
 # read in the .sav file using read.spss()
@@ -910,7 +910,7 @@ dataw46 <- read.spss("ATP W46.sav", to.data.frame = TRUE)
 
 ```
 
-```{r, eval=FALSE}
+```{r}
 #Subsetting the variables we need for religion 
 #colnames(dataw46)
 dataw46_subset <- subset(dataw46,
@@ -945,7 +945,7 @@ dataw46_subset_complete <- na.omit(dataw46_subset)
 
 #Data Wrangling: Religiousness Measure 
 
-```{r, eval=FALSE}
+```{r}
 ##Religiousness as religious affiliation (combine 11 and 12)
 #levels(dataw46_subset$F_RELIG)
 
@@ -1015,50 +1015,49 @@ dataw46_subset$eternal_life <- ifelse(dataw46_subset$ETERNAL_W46 == "My religion
 # levels(dataw46_subset$CONFCLERGY2f_W46)
 
 
-# dataw46_subset <- dataw46 %>%
-#   mutate(CONFCLERGY1a_W46 = recode(CONFCLERGY1a_W46, 
-#                                    "A lot of confidence" = 4,
-#                                    "Some confidence" = 3,
-#                                    "Not much confidence" = 2,
-#                                    "No confidence at all" = 1),
-#          
-#          CONFCLERGY1b_W46 = recode(CONFCLERGY1b_W46, 
-#                                    "A lot of confidence" = 4,
-#                                    "Some confidence" = 3,
-#                                    "Not much confidence" = 2,
-#                                    "No confidence at all" = 1),
-#          
-#          CONFCLERGY1c_W46 = recode(CONFCLERGY1c_W46, 
-#                                    "A lot of confidence" = 4,
-#                                    "Some confidence" = 3,
-#                                    "Not much confidence" = 2,
-#                                    "No confidence at all" = 1),
-#          
-#          CONFCLERGY2a_W46 = recode(CONFCLERGY2a_W46, 
-#                                    "A lot of confidence" = 4,
-#                                    "Some confidence" = 3,
-#                                    "Not much confidence" = 2,
-#                                    "No confidence at all" = 1),
-#          
-#          CONFCLERGY2b_W46 = recode(CONFCLERGY2b_W46, 
-#                                    "A lot of confidence" = 4,
-#                                    "Some confidence" = 3,
-#                                    "Not much confidence" = 2,
-#                                    "No confidence at all" = 1),
-#          
-#          CONFCLERGY2e_W46 = recode(CONFCLERGY2e_W46, 
-#                                    "A lot of confidence" = 4,
-#                                    "Some confidence" = 3,
-#                                    "Not much confidence" = 2,
-#                                    "No confidence at all" = 1),
-#          
-#          CONFCLERGY2f_W46 = recode(CONFCLERGY2f_W46, 
-#                                    "A lot of confidence" = 4,
-#                                    "Some confidence" = 3,
-#                                    "Not much confidence" = 2,
-#                                    "No confidence at all" = 1
-#                                   ))
-
+#dataw46_subset <- dataw46 %>%
+  #mutate(CONFCLERGY1a_W46_num = as.numeric(recode(CONFCLERGY1a_W46, 
+         #                            "A lot of confidence" = 4,
+         #                            "Some confidence" = 3,
+         #                            "Not much confidence" = 2,
+         #                            "No confidence at all" = 1)),
+         # 
+         # CONFCLERGY1b_W46_num = as.numeric(recode(CONFCLERGY1b_W46, 
+         #                            "A lot of confidence" = 4,
+         #                            "Some confidence" = 3,
+         #                            "Not much confidence" = 2,
+         #                            "No confidence at all" = 1)),
+         # 
+         # CONFCLERGY1c_W46_num = as.numeric(recode(CONFCLERGY1c_W46, 
+         #                            "A lot of confidence" = 4,
+         #                            "Some confidence" = 3,
+         #                            "Not much confidence" = 2,
+         #                            "No confidence at all" = 1)),
+         # 
+         # CONFCLERGY2a_W46_num = as.numeric(recode(CONFCLERGY2a_W46, 
+         #                            "A lot of confidence" = 4,
+         #                            "Some confidence" = 3,
+         #                            "Not much confidence" = 2,
+         #                            "No confidence at all" = 1)),
+         # 
+         # CONFCLERGY2b_W46_num = as.numeric(recode(CONFCLERGY2b_W46, 
+         #                            "A lot of confidence" = 4,
+         #                            "Some confidence" = 3,
+         #                            "Not much confidence" = 2,
+         #                            "No confidence at all" = 1)),
+         # 
+         # CONFCLERGY2e_W46_num = as.numeric(recode(CONFCLERGY2e_W46, 
+         #                            "A lot of confidence" = 4,
+         #                            "Some confidence" = 3,
+         #                            "Not much confidence" = 2,
+         #                            "No confidence at all" = 1)),
+         # 
+         # CONFCLERGY2f_W46_num = as.numeric(recode(CONFCLERGY2f_W46, 
+         #                            "A lot of confidence" = 4,
+         #                            "Some confidence" = 3,
+         #                            "Not much confidence" = 2,
+         #                            "No confidence at all" = 1
+         #                           )))
 
 ```
 
@@ -1066,7 +1065,7 @@ dataw46_subset$eternal_life <- ifelse(dataw46_subset$ETERNAL_W46 == "My religion
 
 #Covariates: 
 
-```{r, eval=FALSE}
+```{r}
 library(tidyverse)
 #Transforming gender covariate 
 dataw46_subset$female <- as.character(dataw46_subset$F_SEX)
@@ -1122,27 +1121,54 @@ dataw46_subset <- dataw46_subset %>%
 #Run first pass of analysis 
 
 ```{r, eval=FALSE}
-#Linear model: religion as affiliation on scientific trust 
-relig_trust <- lm(affiliation ~ covid_restriction_irt + 
-                    marital_status + income_linear + 
-                    educ_linear + age_linear + female,
-          data = dataw46_subset)
+#merging the pew data with the dataw46_subset data to run the models 
+ dataw46_subset_new <- merge(dataw46_subset, pew, 
+                      by = "QKEY",
+                      all = TRUE)
 
-#Linear model: religion as eternal_life on scientific trust 
-relig_trust <- lm(eternal_life ~ trust_scientists_fa_dim1 + 
-                    marital_status + income_linear + 
-                    educ_linear + age_linear + female,
-          data = dataw46_subset)
 
-#Linear model: religion as attendance on scientific trust 
-relig_trust <- lm(attendance ~ trust_scientists_fa_dim1 + 
-                    marital_status + income_linear + 
-                    educ_linear + age_linear + female,
-          data = dataw46_subset)
+#Linear model: religion as affiliation on support for covid policies   
+model.affiliation.a <- lm(affiliation ~ covid_restriction_irt + 
+                    marital_status.x + income_linear.x + 
+                    educ_linear.x + age_linear.x + female.x,
+          data = dataw46_subset_new)
+summary(model.affiliation.a)
 
-#Linear model: religion as CONFCLERGY1a_W46 on scientific trust 
-relig_trust <- lm(CONFCLERGY1a_W46 ~ trust_scientists_fa_dim1 + 
-                    marital_status + income_linear + 
-                    educ_linear + age_linear + female,
-          data = dataw46_subset)
+#Linear model: religion as attendance on support for covid policies   
+model.attendance.a <- lm(attendance ~ covid_restriction_irt + 
+                    marital_status.x + income_linear.x + 
+                    educ_linear.x + age_linear.x + female.x,
+          data = dataw46_subset_new)
+summary(model.attendance.a)
+
+#Linear model: religion as eternal_life on support for covid policies  
+model.eternal.a <- lm(eternal_life ~ covid_restriction_irt + 
+                    marital_status.x + income_linear.x + 
+                    educ_linear.x + age_linear.x + female.x,
+          data = dataw46_subset_new)
+summary(model.eternal.a)
+
+
+
+#Linear model: religion as affiliation on on scientific trust
+model.affiliation.b <- lm(affiliation ~ trust_scientists_fa_dim1 + 
+                    marital_status.x + income_linear.x + 
+                    educ_linear.x + age_linear.x + female.x,
+          data = dataw46_subset_new)
+summary(model.affiliation.b)
+
+#Linear model: religion as attendance on on scientific trust  
+model.attendance.b <- lm(attendance ~ trust_scientists_fa_dim1 + 
+                    marital_status.x + income_linear.x + 
+                    educ_linear.x + age_linear.x + female.x,
+          data = dataw46_subset_new)
+summary(model.attendance.b)
+
+#Linear model: religion as eternal_life on on scientific trust
+model.eternal.b <- lm(eternal_life ~ trust_scientists_fa_dim1 + 
+                    marital_status.x + income_linear.x + 
+                    educ_linear.x + age_linear.x + female.x,
+          data = dataw46_subset_new)
+summary(model.eternal.b)
+
 ```
