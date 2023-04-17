@@ -270,7 +270,7 @@ colnames(trust) <- c("QKEY","trust_elected_officials","trust_media","trust_relig
 trust[trust == "Refused"] <- NA
 
 for(i in 2:ncol(trust)){
-  print(table(trust[,i]))
+  #print(table(trust[,i]))
   #print(levels(trust[,i]))
 }
 for(i in 2:ncol(trust)){
@@ -356,7 +356,7 @@ footnote <- expression("Cronbach's Standardized"~alpha~"="~0.66)
 g <- arrangeGrob(plot, bottom = textGrob(footnote, x = 0.025, hjust = 0, vjust= 0, y=0.75, gp = gpar(fontface = "italic", fontsize = 9, col = "black")))
 grid.draw(g)
 
-ggsave(file="factor_analysis_scientific_trust.png", g, width = 8, height = 5.43, units = "in")
+ggsave(file="factor_analysis_scientific_trust_religion.png", g, width = 8, height = 5.43, units = "in")
 
 trust <- cbind(trust,scores)
 colnames(trust)[12:13] <- c("trust_scientists_fa_dim1","trust_scientists_fa_dim2")
@@ -388,7 +388,7 @@ plot <- ggplot(x, aes(x=pid3,y=trust_scientists_fa_dim1, group=pid3,fill=pid3)) 
   scale_y_continuous("Latent Scientific Trust") + 
   scale_x_discrete("") + scale_fill_manual("",values=c("red","purple","blue","black")) + 
   theme(legend.position = "none") 
-ggsave(file="scientific_trust_boxplots_by_party.png", plot, width = 8, height = 5.43, units = "in")
+#ggsave(file="scientific_trust_boxplots_by_party.png", plot, width = 8, height = 5.43, units = "in")
 
 ```
 # Adding Trust in Religious Leaders
@@ -467,7 +467,7 @@ for(i in unique(effects$model)){
     labs(caption="* p < 0.1; ** p < 0.05; *** p < 0.01") + 
     scale_shape_manual("",values=c(23,22,21,20))
   print(plot)
-  ggsave(file=paste(i,"_model",".png",sep=""), plot, width = 8, height = 5.43, units = "in")
+  ggsave(file=paste(i,"_model_EXT",".png",sep=""), plot, width = 8, height = 5.43, units = "in")
 }
 ```
 
@@ -519,7 +519,7 @@ plot <- ggplot(effects,aes(x=factor,y=AME,factor=factor,
   labs(caption="* p < 0.1; ** p < 0.05; *** p < 0.01") + 
   scale_shape_manual("",values=c(23,22,21,20))
 print(plot)
-ggsave(file="latent_policy_scale_model.png", plot, width = 8, height = 5.43, units = "in")
+ggsave(file="latent_policy_scale_model_EXT.png", plot, width = 8, height = 5.43, units = "in")
 
 ```
 
@@ -571,7 +571,7 @@ plot <- ggplot(effects,aes(x=factor,y=AME,
   labs(caption="* p < 0.1; ** p < 0.05; *** p < 0.01") + 
   scale_shape_manual("",values=c(23,22,21,20))
 print(plot)
-ggsave(file="summated_policy_scale_model.png", plot, width = 8, height = 5.43, units = "in")
+ggsave(file="summated_policy_scale_model_EXT.png", plot, width = 8, height = 5.43, units = "in")
 ```
 
 ## Distribution of Summated Rating Scales
@@ -613,7 +613,7 @@ plot <- ggplot(x, aes(x=factor(summated_restriction_scale),
   facet_wrap(~race3) + theme_minimal() + theme(legend.position = "none") + 
   scale_x_discrete("Number of Restrictive COVID-19 Policies Necessary") + 
   scale_y_continuous("Proportion of Respondents")
-ggsave(file="number_policies_dotplot.png", plot, width = 8, height = 5.43, units = "in")
+ggsave(file="number_policies_dotplot_EXT.png", plot, width = 8, height = 5.43, units = "in")
 ```
 
 
@@ -688,7 +688,7 @@ for(i in unique(effects$model)){
     theme(axis.text.x = element_text(hjust = 0.5),axis.text.y = element_text(hjust = 0.5)) + 
     scale_shape_manual("Trust Effects",values=c(23,22,21,20))
   print(plot)
-  ggsave(file=paste(i,"_race3_model",".png",sep=""), plot, width = 8, height = 5.43, units = "in")
+  ggsave(file=paste(i,"_race3_model_EXT",".png",sep=""), plot, width = 8, height = 5.43, units = "in")
 }
 ```
 
@@ -745,7 +745,7 @@ plot <- ggplot(effects,aes(x=race3,y=AME,factor=factor,group=factor,color=factor
         axis.text.y = element_text(hjust = 0.5)) + 
   scale_shape_manual("Trust Effects",values=c(23,22,21,20))
 print(plot)
-ggsave(file="latent_policy_scale_race3_model.png", plot, width = 8, height = 5.43, units = "in")
+ggsave(file="latent_policy_scale_race3_model_EXT.png", plot, width = 8, height = 5.43, units = "in")
 ```
 
 # Data Analysis Figures: OLS Composite Models w/ Race Interaction (& Trust in Religious Leaders)
@@ -800,7 +800,7 @@ plot <- ggplot(effects,aes(x=race3,y=AME,factor=factor,group=factor,color=factor
                                             axis.text.y = element_text(hjust = 0.5)) + 
   scale_shape_manual("Trust Effects",values=c(23,22,21,20))
 print(plot)
-ggsave(file="summated_policy_scale_race3_model.png", plot, width = 8, height = 5.43, units = "in")
+ggsave(file="summated_policy_scale_race3_model_EXT.png", plot, width = 8, height = 5.43, units = "in")
 ```
 
 # Boxplot by Race
@@ -823,7 +823,7 @@ plot <- ggplot(x, aes(x=race3,y=trust_scientists_fa_dim1, group=race3,fill=race3
   geom_jitter(aes(colour=race3),alpha=0.075) + 
   scale_color_manual("",values=c("#F8766D","#7CAE00","#00BFC4","#529EFF","gray")) + 
   scale_fill_manual("",values=c("#F8766D","#7CAE00","#00BFC4","#529EFF","gray"))
-ggsave(file="scientific_trust_boxplots_by_race3.png", plot, width = 8, height = 5.43, units = "in")
+ggsave(file="scientific_trust_boxplots_by_race3_EXT.png", plot, width = 8, height = 5.43, units = "in")
 ```
 
 # Data Analysis Figures: OLS Composite Models 
@@ -863,7 +863,7 @@ plot <- ggplot(subset(mes,!is.na(mes$race3)),
   labs(caption="Note marginal effects relative to 
        white respondents. \n* p < 0.1; ** p < 0.05; *** p < 0.01") + 
   facet_wrap(~model) + scale_shape_manual("Trust Effects",values=c(23,22,21))
-ggsave(file="latent_scientific_trust_model.png", plot, width = 8, height = 5.43, units = "in")
+ggsave(file="latent_scientific_trust_model_EXT.png", plot, width = 8, height = 5.43, units = "in")
 
 mes <- subset(mes,!(mes$factor %in% c("region_factorWest","region_factorSouth","region_factorMidwest")))
 
@@ -887,7 +887,7 @@ plot <- ggplot(mes,aes(x=factor,y=AME,factor=factor,group=factor,label=label)) +
        partisanship relative to baseline factor categories. Contextual 
        regions omitted. \nFactor Baselines: white respondents, Republican 
        identifiers. * p < 0.1; ** p < 0.05; *** p < 0.01") + facet_wrap(~model) 
-ggsave(file="latent_scientific_trust_model_full.png", plot, width = 8, height = 5.43, units = "in")
+#ggsave(file="latent_scientific_trust_model_full_EXT.png", plot, width = 8, height = 5.43, units = "in")
 ```
 
 
@@ -977,9 +977,12 @@ dataw46_subset <- dataw46_subset %>%
 
 ##Religiousness as religious as belief as relational  
 levels(dataw46_subset$ETERNAL_W46)
-dataw46_subset$eternal_life <- ifelse(dataw46_subset$ETERNAL_W46 == "My religion is the one true faith leading to eternal life", "my_religion_only",
-  ifelse(dataw46_subset$ETERNAL_W46 == "Many religions can lead to eternal life", "many_religions",
-                                   ifelse(is.na(dataw46_subset$ETERNAL_W46) | 
+dataw46_subset$eternal_life <- ifelse(dataw46_subset$ETERNAL_W46 == "My religion is 
+                                      the one true faith leading to eternal life", 
+                                      "my_religion_only",
+  ifelse(dataw46_subset$ETERNAL_W46 == "Many religions can lead to eternal life", 
+         "many_religions",
+         ifelse(is.na(dataw46_subset$ETERNAL_W46) | 
                           dataw46_subset$ETERNAL_W46 == "Refused", NA, NA)))
 #dataw46_subset$eternal_life
 
@@ -1295,7 +1298,7 @@ for(i in unique(effects$model)){
     labs(caption="* p < 0.1; ** p < 0.05; *** p < 0.01") + 
     scale_shape_manual("",values=c(23,22,21))
   print(plot)
-  ggsave(file=paste(i,"_model",".png",sep=""), plot, width = 8, 
+  ggsave(file=paste(i,"_model_46",".png",sep=""), plot, width = 8, 
          height = 5.43, units = "in")
 }
 ```
@@ -1353,7 +1356,7 @@ plot <- ggplot(effects,aes(x=factor,y=AME,factor=factor,
   geom_label(vjust=-0.5,hjust=0.25,fill="white") + 
   labs(caption="* p < 0.1; ** p < 0.05; *** p < 0.01") + 
   scale_shape_manual("",values=c(23,22,21))
-ggsave(file="latent_policy_scale_model.png", plot, width = 8, height = 5.43, units = "in")
+ggsave(file="latent_policy_scale_model_46.png", plot, width = 8, height = 5.43, units = "in")
 
 model <- glm(summated_restriction_scale ~ trust_scientists_fa_dim1 + 
                          eternal_life + CONFCLERGY1a_W46_num +
@@ -1404,7 +1407,7 @@ plot <- ggplot(effects,aes(x=factor,y=AME,
   labs(caption="* p < 0.1; ** p < 0.05; *** p < 0.01") + 
   scale_shape_manual("",values=c(23,22,21))
 print(plot)
-ggsave(file="summated_policy_scale_model.png", plot, width = 8, height = 5.43, 
+ggsave(file="summated_policy_scale_model_46.png", plot, width = 8, height = 5.43, 
        units = "in")
 ```
 
@@ -1450,7 +1453,7 @@ plot <- ggplot(x, aes(x=factor(summated_restriction_scale),
   facet_wrap(~race3) + theme_minimal() + theme(legend.position = "none") + 
   scale_x_discrete("Number of Restrictive COVID-19 Policies Necessary") + 
   scale_y_continuous("Proportion of Respondents")
-ggsave(file="number_policies_dotplot.png", plot, width = 8, height = 5.43, units = "in")
+#ggsave(file="number_policies_dotplot.png", plot, width = 8, height = 5.43, units = "in")
 ```
 
 # Conditioned by Race | Data Analysis: COVID Policy ~ Scientific Trust: Baseline Effects
@@ -1522,7 +1525,7 @@ for(i in unique(effects$model)){
     theme(axis.text.x = element_text(hjust = 0.5),axis.text.y = element_text(hjust = 0.5)) + 
     scale_shape_manual("Trust Effects",values=c(23,22,21))
   print(plot)
-  ggsave(file=paste(i,"_race3_model",".png",sep=""), plot, width = 8, height = 5.43, units = "in")
+  ggsave(file=paste(i,"_race3_model_46",".png",sep=""), plot, width = 8, height = 5.43, units = "in")
 }
 ```
 
@@ -1572,7 +1575,7 @@ plot <- ggplot(effects,aes(x=race3,y=AME,factor=factor,group=factor,color=factor
         axis.text.y = element_text(hjust = 0.5)) + 
   scale_shape_manual("Trust Effects",values=c(23,22,21))
 print(plot)
-ggsave(file="latent_policy_scale_race3_model.png", plot, width = 8, height = 5.43, units = "in")
+ggsave(file="latent_policy_scale_race3_model_46.png", plot, width = 8, height = 5.43, units = "in")
 
 model <- glm(summated_restriction_scale ~ trust_scientists_fa_dim1*race3 + 
                        trust_media*race3 + trust_elected_officials*race3 + 
@@ -1619,7 +1622,7 @@ plot <- ggplot(effects,aes(x=race3,y=AME,factor=factor,group=factor,color=factor
                                             axis.text.y = element_text(hjust = 0.5)) + 
   scale_shape_manual("Trust Effects",values=c(23,22,21))
 print(plot)
-ggsave(file="summated_policy_scale_race3_model.png", plot, width = 8, height = 5.43, units = "in")
+ggsave(file="summated_policy_scale_race3_model_46.png", plot, width = 8, height = 5.43, units = "in")
 ```
 
 # Boxplot by Race
@@ -1642,7 +1645,7 @@ plot <- ggplot(x, aes(x=race3,y=trust_scientists_fa_dim1, group=race3,fill=race3
   geom_jitter(aes(colour=race3),alpha=0.075) + 
   scale_color_manual("",values=c("#F8766D","#7CAE00","#00BFC4","#529EFF","gray")) + 
   scale_fill_manual("",values=c("#F8766D","#7CAE00","#00BFC4","#529EFF","gray"))
-ggsave(file="scientific_trust_boxplots_by_race3.png", plot, width = 8, height = 5.43, units = "in")
+#ggsave(file="scientific_trust_boxplots_by_race3.png", plot, width = 8, height = 5.43, units = "in")
 ```
 
 # Data Analysis Figures: OLS Composite Models 
@@ -1683,7 +1686,7 @@ plot <- ggplot(subset(mes,!is.na(mes$race3)),
   labs(caption="Note marginal effects relative to 
        white respondents. \n* p < 0.1; ** p < 0.05; *** p < 0.01") + 
   facet_wrap(~model) + scale_shape_manual("Trust Effects",values=c(23,22,21))
-ggsave(file="latent_scientific_trust_model.png", plot, width = 8, height = 5.43, units = "in")
+ggsave(file="latent_scientific_trust_model_46.png", plot, width = 8, height = 5.43, units = "in")
 
 mes <- subset(mes,!(mes$factor %in% c("region_factorWest","region_factorSouth","region_factorMidwest")))
 
@@ -1707,5 +1710,5 @@ plot <- ggplot(mes,aes(x=factor,y=AME,factor=factor,group=factor,label=label)) +
        partisanship relative to baseline factor categories. Contextual 
        regions omitted. \nFactor Baselines: white respondents, Republican 
        identifiers. * p < 0.1; ** p < 0.05; *** p < 0.01") + facet_wrap(~model) 
-ggsave(file="latent_scientific_trust_model_full.png", plot, width = 8, height = 5.43, units = "in")
-
+#ggsave(file="latent_scientific_trust_model_full.png", plot, width = 8, height = 5.43, units = "in")
+```
