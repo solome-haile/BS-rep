@@ -25,6 +25,7 @@ library(haven)
 library(datawizard)
 library(tidyverse)
 library(labelled)
+library(forcats)
 #setting working directory (Beza-- be sure to comments this out and set your own when you are coding!)
 knitr::opts_knit$set(root.dir = "/Users/solomonaberash/Desktop/Graduate School/SP23 STATS/Rep Paper/BS-rep")
 
@@ -999,16 +1000,14 @@ dataw46_subset <- dataw46_subset %>%
 ##Religiousness as religious as belief as relational  
 #levels(dataw46_subset$ETERNAL_W46)
 dataw46_subset <- dataw46_subset %>%
+  mutate(ETERNAL_W46= as_factor(ETERNAL_W46)) %>% 
   mutate(eternal_life= case_when(
-  ETERNAL_W46 %in% c("My religion is the one true
-                     faith leading to eternal life") ~ "my_religion_only",
-  ETERNAL_W46 %in% c("Many religions can lead to eternal life") ~ "many_religions",
-  ETERNAL_W46 %in% c("Refused") ~ NA) %>%
+    ETERNAL_W46 %in% c("My religion is the one true faith leading to eternal life") ~ "my_religion_only",
+    ETERNAL_W46 %in% c("Many religions can lead to eternal life") ~ "many_religions",
+    ETERNAL_W46 %in% c("Refused") ~ NA)) %>%
   mutate(eternal_life = factor(eternal_life, levels = c("my_religion_only",
                                                     "many_religions")))
 
-
-#dataw46_subset$ETERNAL_W46 <- recode(dataw46_subset$ETERNAL_W46, Refused = NA)
 
 #dataw46_subset$eternal_life
 
@@ -1439,8 +1438,7 @@ plot <- ggplot(effects,aes(x=factor,y=AME,
   scale_shape_manual("",values= c(23,22,21)) + 
   geom_text(aes(label= AME), size = 5, vjust= "top") 
 print(plot)
-#ggsave(file="summated_policy_scale_model_46.png", plot, width = 8, height = 5.43, 
-       units = "in")
+#ggsave(file="summated_policy_scale_model_46.png", plot, width = 8, height = 5.43, units = "in")
 ```
 
 # Distribution of Summated Rating Scales
